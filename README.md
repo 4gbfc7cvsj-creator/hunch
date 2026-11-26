@@ -70,9 +70,32 @@ learning, screen context or everything at once for any app or site. Password fie
 
 ## Get started
 
-**Requirements:** macOS 26 on Apple Silicon, and a few GB of free disk space for the model.
+**Requirements:** an Apple Silicon Mac on macOS 26 or later, and a few GB of free disk space for the
+model.
 
-Build it from source:
+### Download
+
+1. Download the latest `Hunch-….dmg` from [Releases](../../releases/latest), open it, and drag
+   **Hunch** onto **Applications**.
+2. Open Hunch from your Applications folder. Hunch isn't signed with an Apple Developer ID or
+   notarized, so macOS stops it the first time with *"Hunch" Not Opened*. Click **Done** (not Move
+   to Trash).
+3. Open **System Settings → Privacy & Security** and scroll down to **Security**. Next to *"Hunch"
+   was blocked to protect your Mac*, click **Open Anyway**. The button only shows for about an hour
+   after you tried to open the app, so if it isn't there, open Hunch again first.
+4. Click **Open Anyway** in the dialog and confirm with your password or Touch ID. You only do this
+   once. Updates that you drag over the old copy open normally and keep their permissions.
+5. Follow the welcome tour. Hunch asks for **Accessibility** and **Input Monitoring**. It asks for
+   **Screen Recording** only if you want screen context, and for the **Microphone** only for
+   dictation. Hunch then downloads a model that fits your Mac.
+
+Prefer Terminal? Run this after step 1 instead of steps 2–4:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Hunch.app
+```
+
+### Build from source
 
 1. Install the Xcode version that ships the Swift 6.2 toolchain (`scripts/build-app.sh` points at it;
    set `DEVELOPER_DIR` to use another).
@@ -89,10 +112,9 @@ Build it from source:
    scripts/install-app.sh --open
    ```
 
-4. Follow the welcome tour. Hunch asks for **Accessibility** and **Input Monitoring**; **Screen
-   Recording** only if you want screen context, and the **Microphone** only for dictation.
+4. Follow the welcome tour, as in step 5 above.
 
-Run the tests with `swift test`.
+Run the tests with `swift test`. `scripts/make-dmg.sh` packages the built app as a disk image.
 
 ## License
 
