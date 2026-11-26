@@ -116,6 +116,12 @@ xattr -dr com.apple.quarantine /Applications/Hunch.app
 
 Run the tests with `swift test`. `scripts/make-dmg.sh` packages the built app as a disk image.
 
+## Learn more
+
+The [wiki](../../wiki) is the full manual: every setting, the keyboard shortcuts, what Hunch keeps on
+your Mac and how to delete it, troubleshooting, and how it all works inside, from reading text fields
+to the language model engine.
+
 ## License
 
 [MIT](LICENSE). Word-list credits are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
