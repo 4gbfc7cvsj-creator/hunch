@@ -1,0 +1,11 @@
+{
+  "name": "trimmed-1k",
+  "framer": "auto",
+  "length": "medium",
+  "decode": {},
+  "promptTokenBudget": 1024,
+  "customInstructionsFile": "eval/local/custom-instructions.txt",
+  "addBOS": null,
+  "postConfidenceFloor": null,
+  "screenCharLimit": 1500
+}

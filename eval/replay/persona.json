@@ -1,0 +1,1541 @@
+{
+ "globalInstructions": "American spelling. No em dashes.",
+ "appInstructions": {
+  "com.tinyspeck.slackmacgap": "Work chat with my team at Northwind. Short and friendly, no greetings.",
+  "com.apple.MobileSMS": "Texting friends and family. Casual, lowercase is fine.",
+  "mail.google.com": "Clear, polite and to the point.",
+  "jp.naver.line.mac": "Family and friends in Taiwan. Traditional Chinese, casual."
+ },
+ "bundleIDs": {
+  "Messages": "com.apple.MobileSMS",
+  "WhatsApp": "net.whatsapp.WhatsApp",
+  "Discord": "com.hnc.Discord",
+  "LINE": "jp.naver.line.mac",
+  "Slack": "com.tinyspeck.slackmacgap",
+  "Microsoft Teams": "com.microsoft.teams2",
+  "Mail": "com.apple.mail",
+  "Outlook": "com.microsoft.Outlook",
+  "Microsoft Outlook": "com.microsoft.Outlook",
+  "Notes": "com.apple.Notes",
+  "Obsidian": "md.obsidian",
+  "Pages": "com.apple.iWork.Pages",
+  "Microsoft Word": "com.microsoft.Word",
+  "Claude": "com.anthropic.claudefordesktop",
+  "ChatGPT": "com.openai.chat",
+  "Terminal": "com.apple.Terminal",
+  "Xcode": "com.apple.dt.Xcode",
+  "Visual Studio Code": "com.microsoft.VSCode",
+  "Notion": "notion.id",
+  "Google Chrome": "com.google.Chrome",
+  "Safari": "com.apple.Safari",
+  "Gmail": "com.google.Chrome",
+  "Google Docs": "com.google.Chrome",
+  "Gemini": "com.google.Chrome"
+ },
+ "strength": 1.5,
+ "learnedWords": [
+  "SOW",
+  "Bainbridge"
+ ],
+ "sentences": [
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 2,
+   "text": "omw, be there in 10"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 3,
+   "text": "can you grab oat milk on your way back? we're out"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 5,
+   "text": "haha no way, did she actually say that"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 6,
+   "text": "running a little behind, save me a seat"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 9,
+   "text": "mom said dinner is at 6 on sunday, can you bring the folding chairs"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 11,
+   "text": "just finished work, want to get tacos?"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 14,
+   "text": "the cat knocked my plant over again lol"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 18,
+   "text": "sounds good, I'll Venmo you for the tickets"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 22,
+   "text": "ugh my flight got delayed two hours"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 27,
+   "text": "I'm free saturday morning if you still need help with the couch"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 33,
+   "text": "love that, send me pics"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 40,
+   "text": "yep all good here, call you tonight"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 4,
+   "text": "Landed safe, thanks for the ride!"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 8,
+   "text": "I can host this time, our place has more room for the kids"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 13,
+   "text": "Count me in for the BBQ, I'll bring burgers and a salad"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 21,
+   "text": "Haha that photo is amazing, Noah looks so proud"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 30,
+   "text": "We'll be there around noon, traffic permitting"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 45,
+   "text": "Thanks everyone for the birthday wishes, means a lot"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 1,
+   "text": "gg, that last round was close"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 3,
+   "text": "anyone up for a few matches tonight around 9?"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 7,
+   "text": "trail report: snow above 5000 ft, bring microspikes"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 10,
+   "text": "ngl the new map is way better than the old one"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 16,
+   "text": "I can carpool, have room for three plus gear"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 20,
+   "text": "pushed my sprites to the jam repo, lmk if the sizes are off"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 26,
+   "text": "brb grabbing food"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 35,
+   "text": "has anyone tried the new patch yet? heard the healer got nerfed"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 1,
+   "text": "Thanks! I'll take a look after lunch"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 2,
+   "text": "Quick q: are we still on for the roadmap review at 2?"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 3,
+   "text": "Looks great, shipping it 🚀"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 4,
+   "text": "Can we bump this to next sprint? Design isn't ready yet"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 6,
+   "text": "I'll write up the spec today and share it in #onboarding"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 8,
+   "text": "Heads up, I'm OOO Friday, Priya is covering for me"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 9,
+   "text": "Agree, let's keep scope tight for v1 and revisit after launch"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 12,
+   "text": "Filed a Jira ticket for it, linking here"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 15,
+   "text": "+1, the activation numbers back this up"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 19,
+   "text": "Can someone from eng confirm the migration is safe to run during business hours?"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 24,
+   "text": "Nice work on the export feature, customers are already asking about it"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 31,
+   "text": "I'll sync with Riley and come back with a recommendation"
+  },
+  {
+   "app": "Microsoft Teams",
+   "domain": null,
+   "daysAgo": 5,
+   "text": "Thanks all, I'll send notes and action items after the call"
+  },
+  {
+   "app": "Microsoft Teams",
+   "domain": null,
+   "daysAgo": 12,
+   "text": "Joining in two minutes, finishing another meeting"
+  },
+  {
+   "app": "Microsoft Teams",
+   "domain": null,
+   "daysAgo": 25,
+   "text": "Could we get the updated SOW before Friday so legal can review it?"
+  },
+  {
+   "app": "Microsoft Teams",
+   "domain": null,
+   "daysAgo": 38,
+   "text": "Good point, let's add that to the agenda for next week"
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 2,
+   "text": "Thanks for the quick turnaround, this is exactly what we needed."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 4,
+   "text": "Just bumping this, happy to help on our end if anything is blocking."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 7,
+   "text": "Attached is the updated deck with the Q3 numbers."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 10,
+   "text": "Happy to jump on a call if that's easier."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 17,
+   "text": "Apologies for the delay, I was traveling last week."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 23,
+   "text": "Looping in Priya, who owns the integrations roadmap."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 34,
+   "text": "Best,\nAlex"
+  },
+  {
+   "app": "Mail",
+   "domain": null,
+   "daysAgo": 6,
+   "text": "Thanks so much for the recommendation, I'll book a table for Saturday."
+  },
+  {
+   "app": "Mail",
+   "domain": null,
+   "daysAgo": 15,
+   "text": "Could you confirm the appointment time? I have 3:30 on my calendar."
+  },
+  {
+   "app": "Mail",
+   "domain": null,
+   "daysAgo": 29,
+   "text": "We'd love to come, thanks for the invite! Can we bring anything?"
+  },
+  {
+   "app": "Outlook",
+   "domain": null,
+   "daysAgo": 9,
+   "text": "Please see the notes from today's steering committee below."
+  },
+  {
+   "app": "Outlook",
+   "domain": null,
+   "daysAgo": 20,
+   "text": "I've added the open questions to the shared doc so we can close them out on Monday."
+  },
+  {
+   "app": "Notes",
+   "domain": null,
+   "daysAgo": 3,
+   "text": "groceries: eggs, spinach, rice, coffee filters, cat food"
+  },
+  {
+   "app": "Notes",
+   "domain": null,
+   "daysAgo": 8,
+   "text": "gift ideas: hiking socks for dad, cookbook for Emma"
+  },
+  {
+   "app": "Notes",
+   "domain": null,
+   "daysAgo": 19,
+   "text": "car: oil change due at 45k, rotate tires"
+  },
+  {
+   "app": "Notes",
+   "domain": null,
+   "daysAgo": 28,
+   "text": "Seattle weekend: Pike Place early, ferry to Bainbridge, dinner in Ballard"
+  },
+  {
+   "app": "Obsidian",
+   "domain": null,
+   "daysAgo": 5,
+   "text": "1:1 with Riley: wants more ownership of integrations, worried about on-call load"
+  },
+  {
+   "app": "Obsidian",
+   "domain": null,
+   "daysAgo": 13,
+   "text": "Open question: do we gate templates behind the paid plan or keep them free?"
+  },
+  {
+   "app": "Obsidian",
+   "domain": null,
+   "daysAgo": 24,
+   "text": "Retro takeaways: smaller PRs, clearer owners, fewer late scope changes"
+  },
+  {
+   "app": "Notion",
+   "domain": "notion.so",
+   "daysAgo": 6,
+   "text": "Success metric: teams that invite a second member in week one"
+  },
+  {
+   "app": "Notion",
+   "domain": "notion.so",
+   "daysAgo": 16,
+   "text": "Risks: the auth migration could slip, and support needs a week of training"
+  },
+  {
+   "app": "Google Docs",
+   "domain": "docs.google.com",
+   "daysAgo": 11,
+   "text": "This proposal outlines how we plan to improve activation for new workspaces."
+  },
+  {
+   "app": "Google Docs",
+   "domain": "docs.google.com",
+   "daysAgo": 26,
+   "text": "Next steps: finalize scope with design, then share the plan with leadership."
+  },
+  {
+   "app": "Claude",
+   "domain": null,
+   "daysAgo": 2,
+   "text": "Can you tighten this up and make it sound less formal?"
+  },
+  {
+   "app": "Claude",
+   "domain": null,
+   "daysAgo": 9,
+   "text": "Explain like I'm a PM, not an engineer, what this error means"
+  },
+  {
+   "app": "Claude",
+   "domain": "claude.ai",
+   "daysAgo": 14,
+   "text": "Draft a short release note for the export feature, three sentences max."
+  },
+  {
+   "app": "ChatGPT",
+   "domain": "chatgpt.com",
+   "daysAgo": 5,
+   "text": "What's a good 3 day hike near Seattle in late spring?"
+  },
+  {
+   "app": "ChatGPT",
+   "domain": "chatgpt.com",
+   "daysAgo": 18,
+   "text": "Give me a few easy weeknight dinners with tofu"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 2,
+   "text": "好喔，我晚點打給你"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 6,
+   "text": "媽，我下個月回台北，大概待一個禮拜"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 12,
+   "text": "哈哈太好笑了"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 20,
+   "text": "那我們約週末吃飯，地點你們決定就好"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 32,
+   "text": "收到，謝謝！"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 38,
+   "text": "here now, parked by the side entrance"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 23,
+   "text": "did you end up going to the farmers market?"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 45,
+   "text": "lol same, I'm so tired today"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 23,
+   "text": "what was the address again?"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 46,
+   "text": "yes!! finally"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 38,
+   "text": "I'll call you after dinner"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 40,
+   "text": "just saw your text, sorry was in meetings all day"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 10,
+   "text": "want me to pick up anything for tonight?"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 34,
+   "text": "the game starts at 5 right?"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 4,
+   "text": "omg that's so cute"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 1,
+   "text": "leaving now, should be there by 7:15"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 37,
+   "text": "thanks for dinner, that was so good"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 14,
+   "text": "do you still have my rain jacket?"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 44,
+   "text": "can't tonight, rain check?"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 23,
+   "text": "happy anniversary you two!"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 15,
+   "text": "we're at the coffee place on the corner"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 50,
+   "text": "ok I booked the campsite for the 14th"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 11,
+   "text": "tell Emma I said hi"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 20,
+   "text": "my phone is about to die, will text when I'm home"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 48,
+   "text": "the cat has been yelling at me since 5am"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 23,
+   "text": "yeah totally, whenever works for you"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 57,
+   "text": "how was the doctor's appointment?"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 36,
+   "text": "I got us tickets for the 8pm show"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 38,
+   "text": "Just sent the photos from the weekend"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 15,
+   "text": "Who's bringing dessert on Saturday?"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 52,
+   "text": "Safe travels, text us when you land"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 28,
+   "text": "Noah's soccer game moved to 10am"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 5,
+   "text": "We're on our way, see you soon"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 56,
+   "text": "Can someone share the address for the cabin?"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 42,
+   "text": "Sorry I missed the call, will ring you back tonight"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 52,
+   "text": "Happy new year everyone!"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 50,
+   "text": "Sounds perfect, we'll bring the kids' bikes"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 29,
+   "text": "Thank you for hosting, we had the best time"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 51,
+   "text": "anyone know if the trailhead parking needs a pass?"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 8,
+   "text": "nice, that build looks solid"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 49,
+   "text": "I'm down, ping me when you're on"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 36,
+   "text": "lmao the physics in this game are cursed"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 17,
+   "text": "rain gear for sure, forecast changed again"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 37,
+   "text": "just hit level 40 finally"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 29,
+   "text": "who's driving to the trailhead sunday?"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 10,
+   "text": "the jam theme is out, it's 'tiny worlds'"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 45,
+   "text": "low key want to try the new co-op mode"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 24,
+   "text": "uploaded the gpx from yesterday's loop"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 55,
+   "text": "ok I'm out for the night, gn all"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 46,
+   "text": "that boss is so much easier with two healers"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 36,
+   "text": "we should do the lake loop next month when it dries out"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 51,
+   "text": "my wifi is being weird, rejoining"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 8,
+   "text": "好，那我先訂位"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 47,
+   "text": "爸最近身體還好嗎？"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 22,
+   "text": "我剛到家了"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 4,
+   "text": "週末天氣好像不錯"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 38,
+   "text": "照片好可愛"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 24,
+   "text": "沒問題，我再跟你確認時間"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 54,
+   "text": "等等打給你"
+  },
+  {
+   "app": "LINE",
+   "domain": null,
+   "daysAgo": 39,
+   "text": "下次回去一起去吃牛肉麵"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 41,
+   "text": "Thanks for flagging, I'll loop in design"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 24,
+   "text": "Can you drop the link to the dashboard here?"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 52,
+   "text": "On it, should have an answer by EOD"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 42,
+   "text": "Sorry, swamped today, can we push to tomorrow?"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 27,
+   "text": "I left a few comments in the doc, mostly small stuff"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 11,
+   "text": "Let's take this to a thread so we don't flood the channel"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 53,
+   "text": "What's the ETA on the fix? Support is getting tickets about it"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 12,
+   "text": "Reminder: roadmap review moved to Thursday"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 56,
+   "text": "Great question, I don't know yet, let me find out"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 20,
+   "text": "Shipping notes are up in #releases"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 14,
+   "text": "Can we get a quick sync with eng before planning?"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 49,
+   "text": "I think the empty state copy needs another pass"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 22,
+   "text": "Love this, thanks for pulling it together"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 55,
+   "text": "Who owns the billing page these days?"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 27,
+   "text": "Approved from the product side"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 25,
+   "text": "Customers in the beta are asking for bulk invites"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 10,
+   "text": "Let's not block launch on this, it can be a fast follow"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 32,
+   "text": "Good call, let's add it to the checklist"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 10,
+   "text": "Feel free to grab 15 min on my calendar"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 52,
+   "text": "The funnel drop is mostly on the invite step"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 33,
+   "text": "Can you share the numbers broken down by plan?"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 57,
+   "text": "I'll be a few min late to standup"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 49,
+   "text": "Looks like the experiment is trending positive"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 12,
+   "text": "Moving this to backlog for now"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 55,
+   "text": "Nice, that cut onboarding time a lot"
+  },
+  {
+   "app": "Microsoft Teams",
+   "domain": null,
+   "daysAgo": 26,
+   "text": "Thanks, that works for us"
+  },
+  {
+   "app": "Microsoft Teams",
+   "domain": null,
+   "daysAgo": 36,
+   "text": "Can you resend the invite? I don't see it on my calendar"
+  },
+  {
+   "app": "Microsoft Teams",
+   "domain": null,
+   "daysAgo": 12,
+   "text": "We'll need sign-off from their IT team before rollout"
+  },
+  {
+   "app": "Microsoft Teams",
+   "domain": null,
+   "daysAgo": 17,
+   "text": "Sharing my screen now"
+  },
+  {
+   "app": "Microsoft Teams",
+   "domain": null,
+   "daysAgo": 16,
+   "text": "Let's pick this up in Thursday's check-in"
+  },
+  {
+   "app": "Microsoft Teams",
+   "domain": null,
+   "daysAgo": 52,
+   "text": "I'll follow up with the client on timing"
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 25,
+   "text": "Thanks for reaching out."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 28,
+   "text": "I wanted to share a quick update on the rollout."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 53,
+   "text": "Let me know what works best for you."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 23,
+   "text": "Sounds great, see you then."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 37,
+   "text": "Could you send over the latest version when you have a moment?"
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 56,
+   "text": "I've cc'd our billing team so they can help."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 27,
+   "text": "Looking forward to working together."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 7,
+   "text": "Thanks again for your help with this."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 4,
+   "text": "Just a heads up that the release moved to next Tuesday."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 15,
+   "text": "Hope you had a great weekend."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 4,
+   "text": "I'll take a look and reply by Thursday."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 7,
+   "text": "We're still interested and would love to set up a time to talk."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 26,
+   "text": "Would Wednesday at 2pm work for a quick call?"
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 57,
+   "text": "Totally understand, no rush on our end."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 39,
+   "text": "Please let me know if anything is unclear."
+  },
+  {
+   "app": "Mail",
+   "domain": null,
+   "daysAgo": 26,
+   "text": "Thank you for the update."
+  },
+  {
+   "app": "Mail",
+   "domain": null,
+   "daysAgo": 8,
+   "text": "We're looking forward to it!"
+  },
+  {
+   "app": "Mail",
+   "domain": null,
+   "daysAgo": 43,
+   "text": "Hope all is well with you."
+  },
+  {
+   "app": "Mail",
+   "domain": null,
+   "daysAgo": 49,
+   "text": "Sorry we couldn't make it, hope it was a great night."
+  },
+  {
+   "app": "Mail",
+   "domain": null,
+   "daysAgo": 8,
+   "text": "Could we reschedule to next week?"
+  },
+  {
+   "app": "Mail",
+   "domain": null,
+   "daysAgo": 51,
+   "text": "Thanks for the quick reply, that works."
+  },
+  {
+   "app": "Mail",
+   "domain": null,
+   "daysAgo": 28,
+   "text": "Attached are the forms you asked for."
+  },
+  {
+   "app": "Outlook",
+   "domain": null,
+   "daysAgo": 49,
+   "text": "Thanks for the summary, a couple of notes below."
+  },
+  {
+   "app": "Outlook",
+   "domain": null,
+   "daysAgo": 20,
+   "text": "Adding the agenda for tomorrow's review."
+  },
+  {
+   "app": "Outlook",
+   "domain": null,
+   "daysAgo": 55,
+   "text": "Please review before Friday's meeting."
+  },
+  {
+   "app": "Outlook",
+   "domain": null,
+   "daysAgo": 45,
+   "text": "I'll send the final version once legal signs off."
+  },
+  {
+   "app": "Notes",
+   "domain": null,
+   "daysAgo": 2,
+   "text": "to do: renew passport, call insurance, return library books"
+  },
+  {
+   "app": "Notes",
+   "domain": null,
+   "daysAgo": 4,
+   "text": "pharmacy pickup thursday"
+  },
+  {
+   "app": "Notes",
+   "domain": null,
+   "daysAgo": 11,
+   "text": "ideas for Noah's birthday: dino cake, backyard games"
+  },
+  {
+   "app": "Notes",
+   "domain": null,
+   "daysAgo": 41,
+   "text": "trip budget: flights 600, hotel 900, food 400"
+  },
+  {
+   "app": "Notes",
+   "domain": null,
+   "daysAgo": 40,
+   "text": "watch list: the new sci-fi show, that documentary Ollie mentioned"
+  },
+  {
+   "app": "Notes",
+   "domain": null,
+   "daysAgo": 40,
+   "text": "book: dentist for both of us"
+  },
+  {
+   "app": "Obsidian",
+   "domain": null,
+   "daysAgo": 13,
+   "text": "Hypothesis: users who connect an integration in week one retain better"
+  },
+  {
+   "app": "Obsidian",
+   "domain": null,
+   "daysAgo": 47,
+   "text": "Interview notes: admins want clearer permissions, not more settings"
+  },
+  {
+   "app": "Obsidian",
+   "domain": null,
+   "daysAgo": 7,
+   "text": "Q1 themes: activation, reliability, faster setup"
+  },
+  {
+   "app": "Obsidian",
+   "domain": null,
+   "daysAgo": 43,
+   "text": "Follow up with support about the CSV export bug"
+  },
+  {
+   "app": "Notion",
+   "domain": "notion.so",
+   "daysAgo": 32,
+   "text": "Owner: Alex. Status: in review."
+  },
+  {
+   "app": "Notion",
+   "domain": "notion.so",
+   "daysAgo": 30,
+   "text": "Goal: cut time to first value from days to minutes"
+  },
+  {
+   "app": "Notion",
+   "domain": "notion.so",
+   "daysAgo": 8,
+   "text": "Out of scope for v1: SSO, custom roles, audit log"
+  },
+  {
+   "app": "Notion",
+   "domain": "notion.so",
+   "daysAgo": 53,
+   "text": "Launch checklist: docs, support training, email to admins"
+  },
+  {
+   "app": "Google Docs",
+   "domain": "docs.google.com",
+   "daysAgo": 20,
+   "text": "We expect this change to increase weekly active teams by around five percent."
+  },
+  {
+   "app": "Google Docs",
+   "domain": "docs.google.com",
+   "daysAgo": 47,
+   "text": "The main risk is that the new flow adds a step for existing admins."
+  },
+  {
+   "app": "Google Docs",
+   "domain": "docs.google.com",
+   "daysAgo": 45,
+   "text": "Feedback from the beta has been mostly positive, with a few requests for bulk actions."
+  },
+  {
+   "app": "Claude",
+   "domain": null,
+   "daysAgo": 42,
+   "text": "Can you make this shorter and friendlier?"
+  },
+  {
+   "app": "Claude",
+   "domain": null,
+   "daysAgo": 49,
+   "text": "What questions should I ask in a customer interview about onboarding?"
+  },
+  {
+   "app": "Claude",
+   "domain": null,
+   "daysAgo": 11,
+   "text": "Summarize this thread in five bullets for my manager"
+  },
+  {
+   "app": "Claude",
+   "domain": null,
+   "daysAgo": 45,
+   "text": "Is this SQL query right? It returns too many rows"
+  },
+  {
+   "app": "ChatGPT",
+   "domain": "chatgpt.com",
+   "daysAgo": 44,
+   "text": "Suggest a few names for a hiking group chat"
+  },
+  {
+   "app": "ChatGPT",
+   "domain": "chatgpt.com",
+   "daysAgo": 31,
+   "text": "What should I pack for a rainy weekend in Portland?"
+  },
+  {
+   "app": "ChatGPT",
+   "domain": "chatgpt.com",
+   "daysAgo": 28,
+   "text": "Help me write a toast for my friend's wedding, funny but not too long"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 3,
+   "text": "I'll sync with Riley on the integrations timeline"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 9,
+   "text": "Riley is out today, ping me instead"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 17,
+   "text": "Can you add Riley to the thread?"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 5,
+   "text": "Thanks Priya, this looks great"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 14,
+   "text": "I'll check with Priya on the integrations side"
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 20,
+   "text": "Priya and I will present the roadmap on Thursday."
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 6,
+   "text": "Hannah said she can host this year"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 16,
+   "text": "dinner at Hannah's on friday?"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 26,
+   "text": "Hannah and I are in, see you there"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 4,
+   "text": "Noah has practice until 6 today"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 12,
+   "text": "can you grab Noah from school today? I'm stuck in meetings"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 19,
+   "text": "Noah's tooth finally came out lol"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 3,
+   "text": "Emma wants pizza tonight, you in?"
+  },
+  {
+   "app": "WhatsApp",
+   "domain": null,
+   "daysAgo": 15,
+   "text": "Emma's recital is on the 12th, save the date"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 5,
+   "text": "Ollie is driving this time"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 13,
+   "text": "Ollie found a better trail for next weekend"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 22,
+   "text": "ask Ollie, he has the permits"
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 4,
+   "text": "Welcome to Northwind! Your first week is mostly setup and intros."
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 11,
+   "text": "The Northwind team will reach out about next steps."
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 27,
+   "text": "Northwind is hiring a senior designer, send me referrals"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 6,
+   "text": "can you file a Jira ticket for it?"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 18,
+   "text": "it's in Jira under the onboarding board"
+  },
+  {
+   "app": "Microsoft Teams",
+   "domain": null,
+   "daysAgo": 10,
+   "text": "SOW is signed, kicking off Monday"
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 21,
+   "text": "Sending my notes on the SOW tonight."
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 9,
+   "text": "Bainbridge this weekend? weather looks good"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 18,
+   "text": "the Bainbridge loop was muddy but worth it"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 11,
+   "text": "bring microspikes, it's icy up top"
+  },
+  {
+   "app": "Discord",
+   "domain": null,
+   "daysAgo": 24,
+   "text": "lent my microspikes to Ollie so I need them back by friday"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 7,
+   "text": "just Venmo me whenever"
+  },
+  {
+   "app": "Messages",
+   "domain": null,
+   "daysAgo": 20,
+   "text": "Venmo'd you for dinner, thanks!"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 13,
+   "text": "OOO tomorrow, back Thursday"
+  },
+  {
+   "app": "Gmail",
+   "domain": "mail.google.com",
+   "daysAgo": 25,
+   "text": "I'm OOO next week, checking email only now and then."
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 10,
+   "text": "Heads up, the deploy moved to Thursday"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 21,
+   "text": "Heads up, I'll be a bit late to standup"
+  },
+  {
+   "app": "Slack",
+   "domain": null,
+   "daysAgo": 7,
+   "text": "Quick q: is the beta still invite-only?"
+  }
+ ],
+ "clipboard": {
+  "unrelatedPercent": 25,
+  "unrelated": [
+   "https://northwind.atlassian.net/browse/ONB-2231",
+   "1420 NE 45th St, Seattle, WA 98105",
+   "1Z 999 AA1 01 2345 6784",
+   "npm install --save-dev @types/node",
+   "Sony WH-1000XM5 Wireless Noise Canceling Headphones, Black",
+   "Q3 activation: 41.2% (+3.1 pts QoQ)",
+   "Meeting ID: 845 2231 9907",
+   "2 cups flour, 1 tsp baking soda, 1/2 tsp salt",
+   "Thanks for your patience while we look into this.",
+   "(206) 555-0142"
+  ],
+  "related": {
+   "mail-13": "Northwind Inc. account #44817, billing contact: accounts@northwind.example.com",
+   "chat-17": "AS 1247 SFO to SEA, arrives 4:35 PM, Terminal 2",
+   "ns-17": "Baggage report SEA-48213, filed Nov 16",
+   "ai-09": "bash: ./deploy.sh: Permission denied",
+   "ai-11": "MacBook Air 15\" M4, 16GB, 512GB, $1,499 vs. Dell XPS 14, 32GB, 1TB, OLED, $1,799",
+   "mail-04": "Northwind_MSA_signed_2026-11.pdf"
+  }
+ }
+}

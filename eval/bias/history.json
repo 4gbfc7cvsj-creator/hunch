@@ -1,0 +1,24 @@
+{
+  "note": "Invented past sentences for the synthetic vocabulary (not user data), for `bias --gate`: each word's learned lead-ins are the one or two words before it here, and its topic words are these sentences' content words.",
+  "sentences": [
+    "we moved the billing service to Kubernetes last quarter",
+    "the Kubernetes upgrade broke our ingress again",
+    "can someone check why the pods on Kubernetes keep restarting?",
+    "the latency graphs are in Grafana under the api folder",
+    "I added an alert to the Grafana dashboard for error rates",
+    "check Grafana before you page anyone",
+    "I sent the contract to Mr. Okonkwo for signature",
+    "Dr. Okonkwo approved the budget for the pilot",
+    "thanks, Ms. Vasquez, the invoice is attached",
+    "Mr. Vasquez asked for the updated quote by Friday",
+    "let's bring it up at standup tomorrow",
+    "I'll miss standup, dentist appointment",
+    "quick standup notes: deploy blocked on review",
+    "Zephyrus ships to beta testers next week",
+    "the Zephyrus release notes need another pass",
+    "we wrote a postmortem for the database outage",
+    "the postmortem is on the wiki, action items at the bottom",
+    "our offsite in Lisbon was the best one yet",
+    "flights to Lisbon are cheaper in March"
+  ]
+}

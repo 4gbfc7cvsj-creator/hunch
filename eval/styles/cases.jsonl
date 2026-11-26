@@ -1,0 +1,24 @@
+{"id":"ai-01","category":"AI","app":"Claude","surface":"agentPrompt","before":"Can you look at the login page and "}
+{"id":"ai-02","category":"AI","app":"Claude","surface":"agentPrompt","before":"I need a short summary of this article for my team. "}
+{"id":"ai-03","category":"AI","app":"ChatGPT","surface":"agentPrompt","before":"Help me plan a weekend trip to Lisbon. I want "}
+{"id":"ai-04","category":"AI","app":"Claude","surface":"agentPrompt","before":"The tests are failing after the last merge because "}
+{"id":"ai-05","category":"AI","app":"Claude","surface":"agentPrompt","before":"Write an email to my landlord about the "}
+{"id":"ai-06","category":"AI","app":"ChatGPT","surface":"agentPrompt","before":"Explain how "}
+{"id":"ai-07","category":"AI","app":"Claude","surface":"agentPrompt","before":"Refactor this function so that it "}
+{"id":"ai-08","category":"AI","app":"Claude","surface":"agentPrompt","before":"I'm giving a talk next week and "}
+{"id":"wk-01","category":"Work","app":"Slack","surface":"chat","before":"Hey team, quick update on the release: "}
+{"id":"wk-02","category":"Work","app":"Mail","surface":"email","before":"Hi Alex,\n\nThanks for sending over the proposal. "}
+{"id":"wk-03","category":"Work","app":"Slack","surface":"chat","before":"Can we push the meeting to "}
+{"id":"wk-04","category":"Work","app":"Mail","surface":"email","before":"Hi Jordan,\n\nI wanted to follow up on "}
+{"id":"wk-05","category":"Work","app":"Slack","surface":"chat","before":"I looked into the bug and it turns out "}
+{"id":"wk-06","category":"Work","app":"Mail","surface":"email","before":"Hello,\n\nUnfortunately we won't be able to "}
+{"id":"wk-07","category":"Work","app":"Slack","surface":"chat","before":"Great work on the demo yesterday, "}
+{"id":"wk-08","category":"Work","app":"Mail","surface":"email","before":"Hi all,\n\nAs discussed in today's meeting, "}
+{"id":"ch-01","category":"Chats","app":"Messages","surface":"chat","before":"are you coming to the party "}
+{"id":"ch-02","category":"Chats","app":"Messages","surface":"chat","before":"sorry i missed your call, "}
+{"id":"ch-03","category":"Chats","app":"WhatsApp","surface":"chat","before":"just got home and "}
+{"id":"ch-04","category":"Chats","app":"Messages","surface":"chat","before":"what do you want for dinner "}
+{"id":"ch-05","category":"Chats","app":"Discord","surface":"chat","before":"that movie was "}
+{"id":"ch-06","category":"Chats","app":"Messages","surface":"chat","before":"can you pick up "}
+{"id":"ch-07","category":"Chats","app":"WhatsApp","surface":"chat","before":"happy birthday!! "}
+{"id":"ch-08","category":"Chats","app":"Messages","surface":"chat","before":"i think we should "}

@@ -1,0 +1,31 @@
+# Reference clones, competitor app copies, analysis scratch: never commit
+scratch/
+
+# Build output
+.build/
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.swiftpm/
+
+# Models are never committed
+*.gguf
+
+.DS_Store
+.claude/settings.local.json
+
+# Third-party binaries fetched by scripts (llama.cpp xcframework)
+Vendor/
+
+# Local eval inputs with personal info (e.g. your custom instructions): never committed
+eval/local/
+
+# Eval reports can contain completions shaped by personal custom instructions: keep local
+eval/reports/
+.build-search/
+.build-latency/
+.build-orch/
+.build-text/
+.build-alt/
+.build-style/

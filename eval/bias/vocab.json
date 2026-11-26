@@ -1,0 +1,13 @@
+{
+  "note": "Synthetic learned vocabulary for the bias experiment (invented names and jargon, not user data). Weights are the effective per-entry weights passed to the decoder.",
+  "entries": [
+    {"text": "Kubernetes", "weight": 0.9},
+    {"text": "Grafana", "weight": 0.8},
+    {"text": "Okonkwo", "weight": 0.9},
+    {"text": "Vasquez", "weight": 0.8},
+    {"text": "standup", "weight": 0.7},
+    {"text": "Zephyrus", "weight": 0.8},
+    {"text": "postmortem", "weight": 0.7},
+    {"text": "Lisbon", "weight": 0.7}
+  ]
+}

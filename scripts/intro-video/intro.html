@@ -1,0 +1,881 @@
+<!doctype html>
+<!--
+  Hunch intro video: every frame is a pure function of time. `render(t)` draws second `t`;
+  `scripts/intro-video/render.mjs` steps it frame by frame in headless Chrome and encodes the mp4.
+  Open with ?theme=dark|light&frames=<folder of effect frames>; add &play=1 to watch it live.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hunch intro</title>
+<style>
+  :root {
+    /* The app icon's palette: its sage (#abb79f) tile, the white cat, a little of its blue eyes. */
+    --bg: #10130e; --glow-a: rgba(171, 183, 159, 0.30); --glow-b: rgba(120, 178, 214, 0.15);
+    --win: #1d1d23; --bar: #2a2a32; --line: rgba(255, 255, 255, 0.09); --text: #ececf1;
+    --dim: rgba(236, 236, 241, 0.55); --ghost: rgba(236, 236, 241, 0.5); --caption: #ffffff;
+    --field: #26262d; --bubble: #33333c; --key: #2e2e37; --key-edge: rgba(255, 255, 255, 0.16);
+    --panel: #2b2b33; --shadow: rgba(0, 0, 0, 0.55); --accent: #3d8bff; --mark: rgba(255, 214, 10, 0.32);
+    --select: rgba(61, 139, 255, 0.42); --pill: rgba(18, 18, 22, 0.92); --pill-text: #f2f2f6;
+  }
+  :root[data-theme="light"] {
+    --bg: #eef0e7; --glow-a: rgba(171, 183, 159, 0.42); --glow-b: rgba(140, 192, 226, 0.22);
+    --win: #ffffff; --bar: #f0eff4; --line: rgba(0, 0, 0, 0.09); --text: #1c1c21;
+    --dim: rgba(28, 28, 33, 0.55); --ghost: rgba(28, 28, 33, 0.5); --caption: #171a14;
+    --field: #f4f3f7; --bubble: #e9e8ee; --key: #ffffff; --key-edge: rgba(0, 0, 0, 0.16);
+    --panel: #fbfbf8; --shadow: rgba(52, 64, 44, 0.28); --accent: #1672f3; --mark: rgba(255, 204, 0, 0.42);
+    --select: rgba(22, 114, 243, 0.28); --pill: rgba(28, 28, 32, 0.92); --pill-text: #f2f2f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 640px; height: 400px; overflow: hidden; background: var(--bg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    color: var(--text); -webkit-font-smoothing: antialiased; cursor: default;
+  }
+  #stage {
+    position: absolute; inset: 0; overflow: hidden;
+    background:
+      radial-gradient(420px 260px at var(--ax, 28%) var(--ay, 8%), var(--glow-a), transparent 70%),
+      radial-gradient(460px 300px at var(--bx, 86%) var(--by, 96%), var(--glow-b), transparent 70%),
+      var(--bg);
+  }
+  .scene { position: absolute; inset: 0; opacity: 0; }
+  .window {
+    position: absolute; left: 70px; top: 22px; width: 500px; height: 254px; border-radius: 12px;
+    background: var(--win); box-shadow: 0 18px 44px var(--shadow), 0 0 0 0.5px var(--line);
+    overflow: hidden;
+  }
+  .bar {
+    height: 30px; background: var(--bar); border-bottom: 0.5px solid var(--line);
+    display: flex; align-items: center; justify-content: center; position: relative;
+    font-size: 12.5px; font-weight: 600; color: var(--dim);
+  }
+  .lights { position: absolute; left: 12px; top: 9.5px; display: flex; gap: 7px; }
+  .lights i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; display: block; }
+  .lights i:nth-child(2) { background: #febc2e; }
+  .lights i:nth-child(3) { background: #28c840; }
+  /* The genie: the window redrawn as thin strips, each squeezed toward the Dock. */
+  .warp { position: absolute; inset: 0; pointer-events: none; filter: drop-shadow(0 12px 20px var(--shadow)); }
+  .warp > div { position: absolute; inset: 0; }
+  .strip { position: absolute; left: 0; width: 500px; overflow: hidden; transform-origin: 0 0; }
+  .caret { display: inline-block; width: 0; position: relative; }
+  .caret i {
+    position: absolute; left: -0.75px; bottom: -0.16em; width: 1.5px; height: 1.12em; border-radius: 1px;
+    background: var(--accent);
+  }
+  .ghosted { color: var(--ghost); position: relative; }
+
+  /* Mail: the message being answered, then the reply */
+  .msg { display: flex; gap: 9px; padding: 7px 18px; border-bottom: 0.5px solid var(--line); }
+  .avatar {
+    width: 24px; height: 24px; margin-top: 6px; border-radius: 50%; flex: none; display: flex; align-items: center;
+    justify-content: center; font-size: 11.5px; font-weight: 600; color: #fff;
+    background: linear-gradient(160deg, #ff9f6b, #ff5e7e);
+  }
+  .who { font-size: 12.5px; line-height: 18px; font-weight: 600; display: flex; gap: 7px; }
+  .who span { font-weight: 400; color: var(--dim); }
+  .said { font-size: 13px; line-height: 19px; }
+  .reply { padding: 8px 18px; font-size: 13.5px; line-height: 20px; white-space: pre-wrap; }
+  .reply .para + .para { margin-top: 7px; }
+
+  /* Effects close-up */
+  .big-line {
+    position: absolute; left: 36px; top: 104px; font-size: 32.5px; line-height: 42px; white-space: pre;
+    font-weight: 400;
+  }
+  .anchor { display: inline-block; width: 0; height: 0; vertical-align: baseline; }
+
+  /* Chat */
+  .chat { position: absolute; inset: 30px 0 0 0; }
+  .bubble {
+    position: absolute; max-width: 300px; padding: 7px 12px; border-radius: 16px; font-size: 13.5px;
+    line-height: 19px; background: var(--bubble);
+  }
+  .bubble.mine { background: var(--accent); color: #fff; right: 16px; transform-origin: 100% 100%; }
+  .compose {
+    position: absolute; left: 16px; right: 16px; bottom: 30px; min-height: 34px; padding: 7px 13px;
+    border-radius: 17px; background: var(--field); box-shadow: inset 0 0 0 0.5px var(--key-edge);
+    font-size: 13.5px; line-height: 20px; white-space: pre-wrap;
+  }
+  .sel { background: var(--select); border-radius: 2px; }
+  /* The accept shortcut under the next word, as in the welcome tour's practice box. */
+  .keycap {
+    position: absolute; padding: 1px 6px; border-radius: 5px; font-size: 11px; line-height: 15px; font-weight: 600;
+    white-space: nowrap; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--win));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+  /* The Write for me panel floats under the selection, over the window's lower edge. */
+  .panel {
+    position: absolute; left: 90px; top: 135px; width: 460px; border-radius: 11px; background: var(--panel);
+    box-shadow: 0 14px 34px var(--shadow), 0 0 0 0.5px var(--key-edge); padding: 8px 10px;
+    transform-origin: 50% 0;
+  }
+  .panel-top { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; font-size: 11px; color: var(--dim); }
+  .seg {
+    display: flex; width: 150px; padding: 2px; border-radius: 7px;
+    background: var(--field); box-shadow: inset 0 0 0 0.5px var(--line); font-size: 11.5px; font-weight: 500;
+  }
+  .seg span { flex: 1; text-align: center; padding: 2.5px 0; border-radius: 5px; color: var(--dim); }
+  .seg span.on { background: var(--key); color: var(--text); box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.25); }
+  .draft {
+    min-height: 74px; padding: 5px 9px; border-radius: 6px; background: var(--win);
+    box-shadow: inset 0 0 0 0.5px var(--key-edge); font-size: 12.5px; line-height: 16px; white-space: pre-wrap;
+  }
+  .panel-foot { display: flex; align-items: center; margin-top: 7px; font-size: 11px; color: var(--dim); }
+  .panel-foot .grow { flex: 1; }
+  .btn {
+    font-size: 12px; font-weight: 500; padding: 3px 11px; border-radius: 6px; margin-left: 7px;
+    background: var(--key); color: var(--text); box-shadow: 0 0 0 0.5px var(--key-edge);
+  }
+  .btn.primary { background: var(--accent); color: #fff; box-shadow: none; }
+
+  /* Document: a page on a desk, set in a serif */
+  .doc { position: absolute; inset: 30px 0 0 0; background: var(--field); }
+  .tools {
+    height: 24px; padding: 0 14px; display: flex; align-items: center; gap: 11px; background: var(--bar);
+    border-bottom: 0.5px solid var(--line); font-size: 11.5px; color: var(--dim);
+  }
+  .tools .chip { padding: 1.5px 8px; border-radius: 5px; background: var(--key); box-shadow: 0 0 0 0.5px var(--key-edge); font-size: 10.5px; }
+  .tools .rule { width: 0.5px; height: 12px; background: var(--key-edge); }
+  .page {
+    position: absolute; left: 34px; right: 34px; top: 36px; bottom: -12px; padding: 18px 24px; background: var(--win);
+    box-shadow: 0 1px 7px color-mix(in srgb, var(--shadow) 45%, transparent), 0 0 0 0.5px var(--line);
+    font-family: ui-serif, "New York", Georgia, serif;
+  }
+  .page h1 { font-size: 19px; line-height: 26px; font-weight: 700; margin-bottom: 6px; }
+  .page p { font-size: 14px; line-height: 23px; white-space: pre-wrap; }
+  .page p + p { margin-top: 5px; }
+  .fixed { display: inline-block; border-radius: 3px; }
+
+  /* Notes */
+  .note { padding: 16px 22px; }
+  .note h1 { font-size: 21px; line-height: 28px; font-weight: 600; margin-bottom: 8px; }
+  .note p { font-size: 15.5px; line-height: 28px; display: flex; gap: 9px; white-space: pre; }
+  .note p::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--dim); margin-top: 11.5px; flex: none; }
+  .pill {
+    position: absolute; height: 28px; min-width: 28px; border-radius: 14px; background: var(--pill);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35), 0 0 0 0.5px rgba(255, 255, 255, 0.14);
+    display: flex; align-items: center; color: var(--pill-text); font-size: 12px; font-weight: 500;
+    overflow: hidden; white-space: nowrap;
+  }
+  .pill .glyph { width: 16px; height: 16px; margin: 0 6px; }
+
+  /* Caption, the smaller line some scenes put above it, and the row under it */
+  #kicker {
+    position: absolute; left: 0; right: 0; top: 286px; height: 18px; text-align: center;
+    font-size: 13px; line-height: 18px; font-weight: 500; color: var(--dim);
+  }
+  #caption {
+    position: absolute; left: 0; right: 0; top: 291px; height: 30px; text-align: center;
+    font-size: 23px; line-height: 30px; font-weight: 650; letter-spacing: -0.012em; color: var(--caption);
+  }
+  #sub {
+    position: absolute; left: 0; right: 0; top: 333px; height: 26px; display: flex; align-items: center;
+    justify-content: center; gap: 6px; font-size: 12.5px; color: var(--dim);
+  }
+  .key {
+    min-width: 25px; height: 24px; padding: 0 7px; border-radius: 6px; background: var(--key);
+    box-shadow: 0 0 0 0.5px var(--key-edge), 0 1.5px 0 var(--key-edge); display: inline-flex;
+    align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: var(--text);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--key-edge); margin: 0 3px; }
+  /* What's being said, as it's said: hesitations faint, then struck out with the retracted word. */
+  .spoken { font-size: 13.5px; color: var(--text); white-space: pre; display: flex; align-items: center; gap: 8px; }
+  .spoken .rec { width: 7px; height: 7px; border-radius: 50%; background: #ff453a; flex: none; }
+  .spoken s { text-decoration-thickness: 1.5px; }
+
+  /* Closing card */
+  #end { text-align: center; }
+  #end img { position: absolute; left: 252px; top: 62px; width: 136px; height: 136px; }
+  #end h2 {
+    position: absolute; left: 0; right: 0; top: 212px; font-size: 30px; line-height: 38px; font-weight: 700;
+    letter-spacing: -0.02em; color: var(--caption);
+  }
+  #end p { position: absolute; left: 0; right: 0; top: 256px; font-size: 15px; line-height: 22px; color: var(--dim); }
+  #end .name {
+    position: absolute; left: 0; right: 0; top: 318px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--dim);
+  }
+  #fx { position: absolute; left: 0; top: 0; width: 500px; height: 254px; pointer-events: none; }
+  #halo {
+    position: absolute; left: 150px; top: -40px; width: 340px; height: 340px; border-radius: 50%;
+    background: radial-gradient(closest-side, var(--glow-a), transparent);
+  }
+  .glyph { display: block; flex: none; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- 1: suggestions, in a chat: the reply follows from what the friend just asked -->
+  <div class="scene" id="s1">
+    <div class="window">
+      <div class="bar"><div class="lights"><i></i><i></i><i></i></div>Jamie</div>
+      <div class="chat">
+        <div class="bubble" style="left:16px; top:8px">booked us a table for 7</div>
+        <div class="bubble mine" style="top:45px">perfect, see you there</div>
+        <div class="bubble" id="asks" style="left:16px; top:82px; max-width:350px; transform-origin:0 100%">i might be late, you’re gonna be there on time?</div>
+        <div class="bubble mine" id="replied" style="top:119px"></div>
+        <div class="compose" id="typing"></div>
+        <div class="keycap" id="keycap">tab ⇥</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2: effects, close up -->
+  <div class="scene" id="s2">
+    <div class="window">
+      <div class="bar"><div class="lights"><i></i><i></i><i></i></div>Journal</div>
+      <div class="big-line" id="big"></div>
+      <canvas id="fx" width="1000" height="508"></canvas>
+    </div>
+  </div>
+
+  <!-- 3: autocorrect, in a document: a typo, then two words only the sentence can settle -->
+  <div class="scene" id="s3">
+    <div class="window">
+      <div class="bar"><div class="lights"><i></i><i></i><i></i></div>Lisbon trip</div>
+      <div class="doc">
+        <div class="tools">
+          <span class="chip">Body</span><span class="chip">14</span><span class="rule"></span>
+          <b>B</b><em>I</em><u>U</u>
+        </div>
+        <div class="page">
+          <h1>Day two</h1>
+          <p>We walked up to the castle before lunch.</p>
+          <p id="doc-line"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4: Write for me, polishing a rough reply to an email -->
+  <div class="scene" id="s4">
+    <div class="window">
+      <div class="bar"><div class="lights"><i></i><i></i><i></i></div>Re: Launch review</div>
+      <div class="msg" id="prev">
+        <div class="avatar">D</div>
+        <div>
+          <div class="who">Dana Park<span>to me</span></div>
+          <div class="said">Hi Alex, does Tuesday at 2 PM work for the launch review?</div>
+        </div>
+      </div>
+      <div class="reply" id="compose"></div>
+    </div>
+    <div class="panel" id="panel">
+      <div class="panel-top"><div class="seg"><span>Write</span><span class="on">Polish</span></div><span id="status"></span></div>
+      <div class="draft" id="draft"></div>
+      <div class="panel-foot">
+        <span class="grow"></span><span class="btn">Cancel</span><span class="btn primary" id="insert">Insert</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5: dictation, in a note -->
+  <div class="scene" id="s5">
+    <div class="window">
+      <div class="bar"><div class="lights"><i></i><i></i><i></i></div>Notes</div>
+      <div class="note">
+        <h1>To do</h1>
+        <p>Book flights for Lisbon</p>
+        <p>Reply to the landlord</p>
+        <p><span id="said"></span></p>
+      </div>
+      <div class="pill" id="pill"></div>
+    </div>
+  </div>
+
+  <!-- 6: privacy -->
+  <div class="scene" id="end">
+    <div id="halo"></div>
+    <img id="icon" alt="">
+    <h2 id="end-title">Writes with you, in every app.</h2>
+    <p id="end-sub">Nothing leaves your Mac.</p>
+    <div class="name" id="end-name">Hunch</div>
+  </div>
+
+  <div id="kicker"></div>
+  <div id="caption"></div>
+  <div id="sub"></div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+document.documentElement.dataset.theme = params.get("theme") === "light" ? "light" : "dark";
+const framesBase = params.get("frames") || "frames";
+const $ = (id) => document.getElementById(id);
+
+// ---- Timeline (seconds) ----
+const SCENES = [
+  { id: "s1", start: 0.0, end: 6.0, caption: "Has a hunch about what you’ll say next." },
+  { id: "s2", start: 6.0, end: 13.3, caption: "Choose your mood." },
+  { id: "s3", start: 13.3, end: 20.3, caption: "Autocorrect that reads the room." },
+  { id: "s4", start: 20.3, end: 26.7, caption: "Rough in. Polished out." },
+  { id: "s5", start: 26.7, end: 33.9, caption: "Hunch types what you meant.", kicker: "Stumble, pause, change your mind." },
+  { id: "end", start: 33.9, end: 37.1, caption: null },
+];
+const DURATION = 37.1;
+window.DURATION = DURATION;
+
+// ---- Small helpers ----
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, u) => a + (b - a) * u;
+const easeOut = (u) => 1 - Math.pow(1 - u, 3);
+const easeInOut = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+/// Arrives a touch past its mark and settles back: for things that pop in.
+const spring = (u) => 1 + 2.3 * Math.pow(u - 1, 3) + 1.3 * Math.pow(u - 1, 2);
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+function rng(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let z = s;
+    z = Math.imul(z ^ (z >>> 15), z | 1);
+    z ^= z + Math.imul(z ^ (z >>> 7), z | 61);
+    return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
+  };
+}
+/// Key times for typing `text` from `start`, about `perChar` seconds a key, a little uneven like a person.
+function typing(text, start, perChar, seed) {
+  const r = rng(seed);
+  const times = [];
+  let t = start;
+  for (const ch of text) {
+    times.push(t);
+    t += perChar * (0.6 + 0.8 * r()) * (ch === " " ? 1.25 : 1) * (ch === "," || ch === "." ? 1.7 : 1);
+  }
+  return { text, times, end: t, count: (now) => times.filter((x) => x <= now).length };
+}
+/// The caret: solid while typing, blinking when idle since `idleFrom`.
+function caret(t, idleFrom) {
+  const idle = t - idleFrom;
+  const on = idle < 0.45 || Math.floor((idle - 0.45) / 0.53) % 2 === 1;
+  return `<span class="caret"><i style="opacity:${on ? 1 : 0}"></i></span>`;
+}
+// ---- How the windows come and go: the ways apps change places on a Mac ----
+/// Each window's arrival (seconds from its scene's start) and departure (seconds from its scene's end).
+const MOVES = {
+  s1: { enter: ["launch", 0, 0.55], exit: ["swipeOut", -0.3, 0.35] },      // opens from the Dock; swipes to the next Space
+  s2: { enter: ["swipeIn", -0.3, 0.35], exit: ["stageOut", -0.42, 0.13] }, // set aside, as Stage Manager does
+  s3: { enter: ["stageIn", -0.12, 0.48], exit: ["stageOut", -0.42, 0.13] }, // comes forward, and is set aside in turn
+  s4: { enter: ["stageIn", -0.12, 0.48], exit: ["genieOut", -0.6, 0] },    // minimized into the Dock
+  s5: { enter: ["open", 0.2, 0.58], exit: ["toIcon", -0.32, 0.12] },       // a new window, a breath later; folds into the app icon
+};
+/// The window's frame on the stage, and where the Dock would be: off the bottom edge, to the right.
+const WIN = { left: 70, top: 22, width: 500, height: 254 };
+const DOCK = { x: 586, y: 412, width: 22 };
+/// Puts a scene's window where its move has it at `u` (0...1; an exit ends gone). `kind` null: at rest.
+function place(scene, kind, u) {
+  const win = scene.querySelector(".window");
+  let transform = "none", opacity = 1, origin = "50% 50%", minimized = null;
+  switch (kind) {
+    case "launch":   // grows up out of the Dock
+      transform = `translateY(${lerp(64, 0, easeOut(u))}px) scale(${lerp(0.5, 1, spring(u))})`;
+      opacity = seg(u, 0, 0.35); origin = "50% 100%";
+      break;
+    case "swipeOut": transform = `translateX(${-640 * easeInOut(u)}px)`; break;
+    case "swipeIn": transform = `translateX(${640 * (1 - easeInOut(u))}px)`; break;
+    case "stageOut": {   // shrinks to the left edge, turned toward the middle
+      const e = easeInOut(u);
+      transform = `perspective(1100px) translate3d(${-226 * e}px, ${58 * e}px, 0) rotateY(${-38 * e}deg) scale(${lerp(1, 0.34, e)})`;
+      opacity = 1 - seg(u, 0.62, 1);
+      break;
+    }
+    case "stageIn": {    // and the next one comes from there
+      const e = 1 - easeInOut(u);
+      transform = `perspective(1100px) translate3d(${-226 * e}px, ${-62 * e}px, 0) rotateY(${-38 * e}deg) scale(${lerp(1, 0.34, e)})`;
+      opacity = seg(u, 0, 0.3);
+      break;
+    }
+    case "genieOut": minimized = u; break;
+    case "open":         // a new window opening where it stands
+      transform = `scale(${lerp(0.86, 1, spring(u))})`;
+      opacity = seg(u, 0, 0.45);
+      break;
+    case "toIcon":       // folds into the app icon of the closing card
+      transform = `translateY(${-19 * easeInOut(u)}px) scale(${lerp(1, 0.2, easeInOut(u))})`;
+      opacity = 1 - seg(u, 0.4, 1);
+      break;
+  }
+  win.style.transform = transform;
+  win.style.transformOrigin = origin;
+  win.style.opacity = opacity;
+  genie(scene, win, minimized);
+}
+/// The Dock's genie, `p` of the way in (null: not minimizing). The window is redrawn as thin strips;
+/// its sides bend into a funnel that ends at the Dock, then the window slides down through it.
+function genie(scene, win, p) {
+  let warp = scene.querySelector(".warp");
+  if (p === null || p <= 0) {
+    win.style.visibility = "visible";
+    if (warp && warp.firstChild.firstChild) warp.firstChild.textContent = "";
+    return;
+  }
+  if (!warp) {
+    warp = document.createElement("div");
+    warp.className = "warp";
+    warp.appendChild(document.createElement("div"));
+    scene.appendChild(warp);
+  }
+  const clip = warp.firstChild;
+  clip.textContent = "";
+  const copy = win.cloneNode(true);
+  copy.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
+  copy.style.cssText = "left:0; transform:none; opacity:1; visibility:visible; box-shadow:none";
+  win.style.visibility = "hidden";
+
+  const span = DOCK.y - WIN.top;
+  const bend = easeInOut(seg(p, 0, 0.5)), drop = Math.pow(seg(p, 0.16, 1), 1.75) * span;
+  const curve = (y) => (bend * (1 - Math.cos(Math.PI * clamp((y - WIN.top) / span)))) / 2;
+  const leftAt = (y) => lerp(WIN.left, DOCK.x - DOCK.width / 2, curve(y));
+  const rightAt = (y) => lerp(WIN.left + WIN.width, DOCK.x + DOCK.width / 2, curve(y));
+  // Strips are drawn a little wide and cut to the funnel's exact outline, so its edges stay smooth.
+  const H = 3, over = 2, down = [], up = [];
+  let y = WIN.top + drop;
+  for (let row = 0; row < WIN.height && y < DOCK.y; row += H, y += H) {
+    const l0 = leftAt(y), r0 = rightAt(y), l1 = leftAt(y + H), r1 = rightAt(y + H);
+    const strip = document.createElement("div"), part = copy.cloneNode(true);
+    strip.className = "strip";
+    // The strip's rectangle onto the funnel's trapezoid here, exactly (a projective map), so that
+    // neighbouring strips meet along their whole shared edge and text stays in one piece.
+    const w0 = r0 - l0 + 2 * over, w1 = r1 - l1 + 2 * over, d = w0 / w1;
+    strip.style.cssText = `top:${y}px; height:${H + 0.6}px; transform:matrix3d(${w0 / WIN.width},0,0,0, ${((l1 - over) * d - (l0 - over)) / H},${d},0,${(d - 1) / H}, 0,0,1,0, ${l0 - over},0,0,1)`;
+    part.style.top = `${-row}px`;
+    strip.appendChild(part);
+    clip.appendChild(strip);
+    down.push(`${l0}px ${y}px`);
+    up.unshift(`${r0}px ${y}px`);
+  }
+  down.push(`${leftAt(y)}px ${y}px`);
+  up.unshift(`${rightAt(y)}px ${y}px`);
+  clip.style.clipPath = `polygon(${down.concat(up).join(",")})`;
+}
+/// One of the app's glyphs (written by IntroVideoFrames.swift), in `color`: "mic" is the dictation
+/// pill's cat face with its mic.
+const glyph = (name, color) => {
+  const url = `url(${framesBase}/glyph-${name}.png)`;
+  return `<i class="glyph" style="background:${color}; -webkit-mask-image:${url}; mask-image:${url}"></i>`;
+};
+
+// ---- Scene 1: suggestions (a reply that follows from the friend's question, taken a word at a time) ----
+const reply = typing("no wor", 1.5, 0.085, 11);
+const GHOST = ["ries,", " i’ll", " wait", " for", " you."];
+const T1 = { asks: 0.55, show: 2.3, tabs: [3.15, 3.37, 3.59, 3.81, 4.03], send: 4.7 };
+/// Rises quickly at `from`, holds, and fades: marks what a suggestion or a draft drew on.
+const noticed = (t, from) => seg(t, from, from + 0.2) * (1 - seg(t, from + 0.65, from + 1.15));
+function scene1(t) {
+  // The friend's question arrives; it lights up for a moment when the suggestion answers it.
+  const asks = $("asks"), a = easeOut(seg(t, T1.asks, T1.asks + 0.28)), ring = noticed(t, T1.show);
+  asks.style.opacity = a;
+  asks.style.transform = `translateY(${lerp(14, 0, a)}px) scale(${lerp(0.9, 1, spring(seg(t, T1.asks, T1.asks + 0.34)))})`;
+  asks.style.boxShadow = ring <= 0 ? "none" :
+    `0 0 0 1.5px color-mix(in srgb, var(--accent) ${Math.round(ring * 100)}%, transparent), 0 0 14px color-mix(in srgb, var(--accent) ${Math.round(ring * 45)}%, transparent)`;
+
+  const typed = reply.text.slice(0, reply.count(t)), taken = T1.tabs.filter((x) => x <= t).length;
+  let html = "";
+  if (t < T1.send) {
+    html = esc(typed);
+    if (!taken) html += `<span class="anchor" id="cap-from"></span>`;
+    // Each Tab takes the next word: it settles into the text color and the caret moves past it.
+    GHOST.slice(0, taken).forEach((w, i) => {
+      if (i === taken - 1) html += `<span class="anchor" id="cap-from"></span>`;
+      const u = seg(t, T1.tabs[i], T1.tabs[i] + 0.12), glint = Math.round(24 * (1 - seg(t, T1.tabs[i], T1.tabs[i] + 0.3)));
+      html += `<span style="color:color-mix(in srgb, var(--text) ${Math.round(u * 100)}%, var(--ghost)); background:color-mix(in srgb, var(--accent) ${glint}%, transparent); border-radius:3px">${esc(w)}</span>`;
+    });
+    html += caret(t, !typed ? 0 : typed.length < reply.text.length ? t : taken ? T1.tabs[taken - 1] : reply.end);
+    html += `<span class="anchor" id="cap-to"></span>`;
+    if (t >= T1.show && taken < GHOST.length) {
+      const u = easeOut(seg(t, T1.show, T1.show + 0.18));
+      html += `<span class="ghosted" style="opacity:${u}; left:${lerp(-6, 0, u)}px">${esc(GHOST.slice(taken).join(""))}</span>`;
+    }
+  } else {
+    html = caret(t, T1.send);
+  }
+  $("typing").innerHTML = html;
+  // Sent: the bubble pops in above the field.
+  const sent = $("replied"), s = easeOut(seg(t, T1.send, T1.send + 0.28));
+  sent.textContent = reply.text + GHOST.join("");
+  sent.style.opacity = s;
+  sent.style.transform = `translateY(${lerp(34, 0, s)}px) scale(${lerp(0.9, 1, spring(seg(t, T1.send, T1.send + 0.34)))})`;
+
+  // The accept shortcut sits under the caret, glides after each word taken, and goes with the last.
+  const cap = $("keycap"), chat = cap.parentElement.getBoundingClientRect(), scale = chat.width / 500 || 1;
+  const last = taken ? T1.tabs[taken - 1] : T1.show;
+  const x0 = $("cap-to") ? $("cap-to").getBoundingClientRect().left : 0;
+  const xFrom = $("cap-from") ? $("cap-from").getBoundingClientRect().left : x0;
+  const x = lerp(xFrom, x0, easeOut(seg(t, last, last + 0.2)));
+  const press = Math.max(...T1.tabs.map((x) => seg(t, x - 0.07, x) * (1 - seg(t, x + 0.05, x + 0.14))));
+  const done = T1.tabs[T1.tabs.length - 1];
+  cap.style.opacity = $("cap-to") ? easeOut(seg(t, T1.show + 0.1, T1.show + 0.3)) * (1 - seg(t, done + 0.15, done + 0.35)) : 0;
+  cap.style.left = `${(x - chat.left) / scale - 6}px`;
+  cap.style.top = `${$("typing").offsetTop + $("typing").offsetHeight + 5}px`;
+  cap.style.transform = `translateY(${1.5 * press}px) scale(${1 - 0.06 * press})`;
+  cap.style.filter = press > 0 ? `brightness(${1 + 0.3 * press})` : "none";
+  return "";
+}
+
+// ---- Scene 2: effects (the app's own frames, see IntroVideoFrames.swift) ----
+const big = typing("Today feels ", 0.3, 0.04, 21);
+const SLOTS = [
+  { name: "paws", start: 0.95, end: 2.35 },
+  { name: "decode", start: 2.45, end: 3.5 },
+  { name: "neon", start: 3.6, end: 5.1 },
+  // The last one stays until the scene has left (its window is still on stage a moment after the scene ends).
+  { name: "wisteria", start: 5.2, end: 7.5, stays: true },
+];
+let manifest = null;
+const shots = {};
+const shotFor = (name) => shots[`${name}-${document.documentElement.dataset.theme}`] || shots[name];
+function scene2(t) {
+  const n = big.count(t);
+  $("big").innerHTML = esc(big.text.slice(0, n)) + caret(t, n < big.text.length ? t : big.end) + `<span class="anchor" id="anchor"></span>`;
+  const slot = SLOTS.find((s) => t >= s.start && t < s.end);
+  fx.clearRect(0, 0, 1000, 508);
+  if (slot && manifest) drawShot(shotFor(slot.name), t - slot.start, slot.stays ? 1 : 1 - seg(t, slot.end - 0.12, slot.end));
+  return SLOTS.map((s) => {
+    const on = t >= s.start && t < s.end;
+    const c = manifest ? shotFor(s.name).color : [1, 1, 1];
+    const rgb = `rgb(${c.slice(0, 3).map((v) => Math.round(v * 255)).join(",")})`;
+    return `<span class="dot" style="${on ? `background:${rgb}; box-shadow:0 0 8px ${rgb}; transform:scale(1.25)` : ""}"></span>`;
+  }).join("");
+}
+const fx = $("fx").getContext("2d");
+/// The close-up: the app draws its effects at 26 pt (its largest scale), shown here this much bigger.
+const ZOOM = 1.25;
+function drawShot(shot, elapsed, alpha) {
+  // The canvas is part of the window (so it moves with it); the window is at rest while this is measured.
+  const a = $("anchor").getBoundingClientRect(), w = $("fx").getBoundingClientRect();
+  fx.save();
+  fx.scale(2, 2);
+  // From here on: the suggestion's left edge on its baseline is the origin, in the app's points.
+  fx.translate(a.left - w.left, a.bottom - w.top);
+  fx.scale(ZOOM, ZOOM);
+  // Particles sit behind the text, inside a box that fades out toward its edges.
+  for (const p of shot.particles) drawParticle(shot, p, elapsed, alpha);
+  const frame = shot.images[Math.min(shot.images.length - 1, Math.max(0, Math.floor(elapsed * manifest.fps)))];
+  const fade = shot.fadeMs > 0 ? easeOut(seg(elapsed, 0, shot.fadeMs / 1000)) : 1;
+  fx.globalAlpha = alpha * fade;
+  fx.drawImage(frame, -shot.textX, shot.baselineFromBottom - shot.height, shot.width, shot.height);
+  fx.restore();
+}
+/// A point on the particle's path at `u` (0...1): a smooth curve through its evenly timed points.
+function along(path, u) {
+  const n = path.length - 1, f = clamp(u) * n, i = Math.min(n - 1, Math.floor(f)), k = f - i;
+  const p = (j) => path[clamp(j, 0, n)];
+  const cr = (a, b, c, d) => 0.5 * (2 * b + (c - a) * k + (2 * a - 5 * b + 4 * c - d) * k * k + (3 * b - a - 3 * c + d) * k * k * k);
+  return [0, 1].map((d) => cr(p(i - 1)[d], p(i)[d], p(i + 1)[d], p(i + 2)[d]));
+}
+function drawParticle(shot, p, elapsed, alpha) {
+  const u = (elapsed - p.delay) / p.life;
+  if (u < 0 || u > 1) return;
+  const [px, py] = along(p.path, u);
+  let opacity = u < p.fadeIn ? u / p.fadeIn : u > 1 - p.fadeOut ? (1 - u) / p.fadeOut : 1;
+  // The emitter's edge mask: the text box grown by `margin`, fading over `edge` on every side.
+  const left = -shot.margin, right = shot.textWidth + shot.margin;
+  const bottom = shot.descender - 2 - shot.margin, top = shot.ascender + 2 + shot.margin;
+  opacity *= clamp(Math.min(px - left, right - px) / shot.edge) * clamp(Math.min(py - bottom, top - py) / shot.edge);
+  if (opacity <= 0) return;
+  const s = p.size, rgb = p.color.map((v) => Math.round(v * 255)).join(",");
+  let rotation = p.rotation + p.spin * p.life * u, scale = 1;
+  if (p.shape === "wisp" && p.spin === 0) {
+    // A gentle lean back and forth as it floats.
+    const keys = [0, 0.22, -0.22, 0.132, 0], f = u * 4, i = Math.min(3, Math.floor(f));
+    rotation = p.rotation + lerp(keys[i], keys[i + 1], f - i);
+  }
+  if (p.shape === "mist") scale = lerp(0.7, 1.9, 1 - Math.pow(1 - u, 2));
+  fx.save();
+  fx.translate(px, -py);
+  fx.scale(scale, -scale);   // the shapes are drawn y-up, as in AppKit
+  fx.rotate(rotation);
+  fx.globalAlpha = alpha * opacity;
+  fx.fillStyle = `rgba(${rgb},${p.shape === "mist" ? 0.3 : 0.9})`;
+  const glow = { mist: [0.35, 0.55], wisp: [0.3, 0.8], dot: [0.45, 0.9] }[p.shape];
+  if (glow) { fx.shadowColor = `rgba(${rgb},${glow[1]})`; fx.shadowBlur = s * glow[0] * 2 * 2 * ZOOM * scale; }
+  fx.beginPath();
+  let rule = "nonzero";
+  switch (p.shape) {
+    case "petal":
+      fx.moveTo(0, s / 2);
+      fx.bezierCurveTo(s * 0.45, s * 0.05, s * 0.4, -s / 2, 0, -s / 2);
+      fx.bezierCurveTo(-s * 0.4, -s / 2, -s * 0.45, s * 0.05, 0, s / 2);
+      break;
+    case "blossom": {
+      const r = s * 0.22;
+      for (let i = 0; i < 5; i++) {
+        const a = (i * 2 * Math.PI) / 5 + Math.PI / 2, cx = s * 0.26 * Math.cos(a), cy = s * 0.26 * Math.sin(a);
+        fx.moveTo(cx + r, cy); fx.arc(cx, cy, r, 0, 2 * Math.PI);
+      }
+      fx.moveTo(r * 0.8, 0); fx.arc(0, 0, r * 0.8, 0, 2 * Math.PI);
+      break;
+    }
+    case "dot": fx.arc(0, 0, s * 0.35, 0, 2 * Math.PI); break;
+    case "square": fx.rect(-s * 0.35, -s * 0.35, s * 0.7, s * 0.7); break;
+    case "wisp": {
+      const w = s * 0.78, top = s / 2, hem = -s * 0.32, l = -w / 2, r = w / 2, sc = w / 3;
+      fx.moveTo(l, hem); fx.lineTo(l, top - w / 2);
+      fx.arc(0, top - w / 2, w / 2, Math.PI, 0, true);
+      fx.lineTo(r, hem);
+      for (let k = 0; k < 3; k++) { const x1 = r - k * sc, x2 = x1 - sc; fx.quadraticCurveTo((x2 + x1) / 2, -s / 2, x2, hem); }
+      fx.closePath();
+      const ew = s * 0.11, eh = s * 0.19, ey = top - w / 2 - eh * 0.35;
+      for (const x of [-s * 0.15, s * 0.15]) { fx.moveTo(x + ew / 2, ey); fx.ellipse(x, ey, ew / 2, eh / 2, 0, 0, 2 * Math.PI); }
+      rule = "evenodd";
+      break;
+    }
+    case "mist":
+      for (const [x, y, w, h] of [[-0.5, -0.25, 0.55, 0.45], [-0.2, -0.15, 0.55, 0.5], [0.05, -0.28, 0.45, 0.4]]) {
+        fx.moveTo((x + w) * s, (y + h / 2) * s); fx.ellipse((x + w / 2) * s, (y + h / 2) * s, (w / 2) * s, (h / 2) * s, 0, 0, 2 * Math.PI);
+      }
+      break;
+  }
+  fx.fill(rule);
+  fx.restore();
+}
+
+// ---- Scene 3: autocorrect (fixes land by themselves, timed as the app times them) ----
+// Typed fast and sloppy, the way real typing samples come in: garbled words fixed as you go (once the
+// next word starts), then two only the sentence can settle ("coats" is a real word, and "wether" could
+// be whether or weather), fixed together when the full stop lands.
+const doc = typing("Tomorow we take teh trian to the coats, and if teh wether holds we cna stay for susnet", 0.6, 0.036, 51);
+const docEnd = doc.end + 0.4;   // the line sits a beat as typed before the full stop
+const FIXES = [
+  ["Tomorow", "Tomorrow"], ["teh", "the"], ["trian", "train"], ["coats", "coast", true], ["teh", "the"],
+  ["wether", "weather", true], ["cna", "can"], ["susnet", "sunset", "end"],
+].reduce((list, [wrong, word, kind]) => {
+  const from = doc.text.indexOf(wrong, list.length ? list[list.length - 1].from + 1 : 0);
+  const next = from + wrong.length + 1;   // the next word's first letter
+  const at = kind === true ? docEnd + 0.1 * list.filter((f) => f.smart).length : kind === "end" ? docEnd : doc.times[next] + 0.05;
+  list.push({ from, word, wrong, at, smart: kind === true });
+  return list;
+}, []);
+/// A word autocorrect has just put right: it lands with a tint that fades and keeps a faint underline a
+/// moment longer. The `smart` ones are held longer and lift a little, so they read.
+function fixedWord(word, since, smart) {
+  const hold = smart ? 1.0 : 0.25, keep = smart ? 2.0 : 1.2;
+  const tint = (smart ? 34 : 18) * seg(since, 0, 0.1) * (1 - seg(since, hold, hold + 0.5));
+  const line = 55 * seg(since, 0, 0.15) * (1 - seg(since, keep, keep + 0.5));
+  const lift = smart ? 1 + 0.09 * Math.sin(Math.PI * seg(since, 0, 0.32)) : 1;
+  return `<span class="fixed" style="transform:scale(${lift}); background:color-mix(in srgb, var(--accent) ${Math.round(tint)}%, transparent); box-shadow:0 1.5px 0 color-mix(in srgb, var(--accent) ${Math.round(line)}%, transparent)">${esc(word)}</span>`;
+}
+function scene3(t) {
+  const n = doc.count(t);
+  let html = "", at = 0;
+  for (const f of FIXES) {
+    if (t < f.at) continue;
+    html += esc(doc.text.slice(at, f.from)) + fixedWord(f.word, t - f.at, f.smart);
+    at = f.from + f.wrong.length;
+  }
+  html += esc(doc.text.slice(at, Math.max(at, n))) + (t >= docEnd ? "." : "");
+  const idle = !n ? 0 : t >= docEnd ? docEnd : n === doc.text.length ? doc.end : t;
+  $("doc-line").innerHTML = html + caret(t, idle);
+  return "";
+}
+
+// ---- Scene 4: Write for me (Polish), a rough reply to an email ----
+const rough = typing("confirm the meeting for tuesday 2pm", 0.5, 0.028, 31);
+// The polished reply, a paragraph each: the names come from the message it answers.
+const POLISHED = ["Hi Dana,", "Just confirming our meeting for Tuesday at 2 PM. Looking forward to it.", "Best,\nAlex"];
+const pieces = POLISHED.join("\n").match(/\S+\s*/g);
+const T4 = { select: [1.8, 2.1], keys: 2.2, panel: 2.35, draft: [2.65, 3.85], insert: 4.45, close: 4.6 };
+function scene4(t) {
+  const compose = $("compose"), panel = $("panel");
+  const typed = rough.text.slice(0, rough.count(t));
+  if (t < T4.close) {
+    const cut = Math.round(rough.text.length * easeInOut(seg(t, ...T4.select)));
+    compose.innerHTML = cut > 0
+      ? `<span class="sel">${esc(typed.slice(0, cut))}</span>${esc(typed.slice(cut))}`
+      : esc(typed) + caret(t, !typed ? 0 : typed.length < rough.text.length ? t : rough.end);
+  } else {
+    // The polished text lands with a flash that fades.
+    const u = seg(t, T4.close, T4.close + 0.5);
+    const flash = `background:color-mix(in srgb, var(--mark) ${Math.round(100 * (1 - u))}%, transparent); border-radius:3px`;
+    compose.innerHTML = POLISHED.map((p, i) =>
+      `<div class="para"><span style="${flash}">${esc(p)}</span>${i === POLISHED.length - 1 ? caret(t, T4.close) : ""}</div>`).join("");
+  }
+  // The message it answers lights up for a moment as the draft starts with its sender's name.
+  $("prev").style.background = `color-mix(in srgb, var(--accent) ${Math.round(16 * noticed(t, T4.draft[0]))}%, transparent)`;
+
+  const inU = easeOut(seg(t, T4.panel, T4.panel + 0.25)), outU = easeInOut(seg(t, T4.close - 0.02, T4.close + 0.18));
+  panel.style.opacity = inU * (1 - outU);
+  panel.style.transform = `translateY(${lerp(-8, 0, inU) - 5 * outU}px) scale(${lerp(0.94, 1, spring(seg(t, T4.panel, T4.panel + 0.32))) - 0.03 * outU})`;
+  const shown = Math.floor(pieces.length * seg(t, ...T4.draft) + 0.0001);
+  $("draft").innerHTML = pieces.map((w, i) => `<span style="opacity:${i < shown ? 1 : 0}">${esc(w)}</span>`).join("");
+  $("status").textContent = t < T4.draft[1] ? "Polishing…" : "";
+  const press = seg(t, T4.insert - 0.1, T4.insert) * (1 - seg(t, T4.insert + 0.08, T4.insert + 0.2));
+  $("insert").style.transform = `scale(${1 - 0.07 * press})`;
+  $("insert").style.filter = `brightness(${1 + 0.35 * press})`;
+
+  return "";
+}
+
+// ---- Scene 5: dictation (said with an um, an uh, a repeat and a change of mind; it lands cleaned up) ----
+// From the dictation eval's filler-and-correction case.
+const SAID = "Remind Alex to send the slides by Friday.";
+/// What's said, word by word: `drop` words are what cleanup leaves out (fillers, the repeat, the
+/// retracted day and the "no wait" that retracts it).
+const SPEECH = [
+  ["um", 1], ["remind"], ["alex"], ["to"], ["send"], ["the", 1], ["uh", 1], ["the"], ["slides"], ["by"],
+  ["thursday", 1], ["no", 1], ["wait", 1], ["friday"],
+];
+const T5 = { record: 0.75, speak: 1.0, stop: 4.85, land: 5.45, hide: 5.37, strike: 5.55 };
+/// When each word is said: an even pace, with pauses where someone hesitates.
+const spokenAt = (() => {
+  let t = T5.speak;
+  return SPEECH.map(([w]) => {
+    const at = t;
+    t += w === "um" || w === "uh" ? 0.42 : w === "thursday" ? 0.42 : w === "wait" ? 0.28 : 0.21;
+    return at;
+  });
+})();
+function scene5(t) {
+  const landed = easeOut(seg(t, T5.land, T5.land + 0.2));
+  $("said").innerHTML = (t >= T5.land ? `<span style="opacity:${landed}">${SAID}</span>` : "") + caret(t, t >= T5.land ? T5.land : 0) + `<span class="anchor" id="say-anchor"></span>`;
+  // The pill sits just under the caret.
+  const pill = $("pill"), win = pill.parentElement.getBoundingClientRect(), a = $("say-anchor").getBoundingClientRect();
+  const scale = win.width / 500 || 1;
+  const inU = easeOut(seg(t, T5.record, T5.record + 0.2)), outU = seg(t, T5.hide, T5.hide + 0.18);
+  pill.style.left = `${(a.left - win.left) / scale + 6}px`;
+  pill.style.top = `${(a.bottom - win.top) / scale + 9}px`;
+  pill.style.opacity = inU * (1 - outU);
+  pill.style.transform = `scale(${lerp(0.7, 1, spring(seg(t, T5.record, T5.record + 0.28)))})`;
+  const working = easeInOut(seg(t, T5.stop, T5.stop + 0.22));
+  const pulse = 0.5 + 0.5 * Math.sin((t - T5.record) * 2 * Math.PI / 1.0);
+  const color = working > 0.5 ? `rgba(242,242,246,${0.55 + 0.45 * pulse})` : `rgba(255,69,58,${0.5 + 0.5 * pulse})`;
+  pill.style.width = `${lerp(28, 116, working)}px`;
+  pill.innerHTML = glyph("mic", color) + `<span style="opacity:${working}">Transcribing…</span>`;
+
+  // The words as they're said (a red dot while listening). Once the note has the clean line, what
+  // cleanup left out fades and is struck through.
+  const struck = easeInOut(seg(t, T5.strike, T5.strike + 0.35));
+  const listening = seg(t, T5.speak - 0.2, T5.speak) * (1 - seg(t, T5.stop, T5.stop + 0.2));
+  const words = SPEECH.map(([w, drop], i) => {
+    const u = easeOut(seg(t, spokenAt[i], spokenAt[i] + 0.16));
+    if (u <= 0) return "";
+    const hesitation = w === "um" || w === "uh";
+    const o = u * (drop ? lerp(hesitation ? 0.55 : 1, 0.35, struck) : 1);
+    const word = drop && struck > 0 ? `<s style="text-decoration-color:color-mix(in srgb, #ff453a ${Math.round(struck * 100)}%, transparent)">${w}</s>` : w;
+    return `<span style="display:inline-block; opacity:${o}; transform:translateY(${lerp(5, 0, u)}px)${hesitation ? "; font-style:italic" : ""}">${word}</span>`;
+  }).join(" ");
+  return `<span class="spoken"><i class="rec" style="opacity:${listening * (0.5 + 0.5 * pulse)}"></i><span>${words}</span></span>`;
+}
+
+// ---- Scene 6: privacy ----
+function scene6(t, length) {
+  const out = 1 - easeInOut(seg(t, length - 0.5, length));
+  const rise = (el, from, dy) => {
+    const u = easeOut(seg(t, from, from + 0.5));
+    el.style.opacity = u * out;
+    el.style.transform = `translateY(${lerp(dy, 0, u)}px)`;
+  };
+  // The icon springs up where the last window folded away, with a soft glow opening behind it.
+  const u = easeOut(seg(t, 0, 0.4));
+  $("icon").style.opacity = u * out;
+  $("icon").style.transform = `scale(${lerp(0.55, 1, spring(seg(t, 0, 0.55))) * lerp(1, 0.94, 1 - out)})`;
+  const glow = easeOut(seg(t, 0.1, 1.1));
+  $("halo").style.opacity = glow * out * (0.8 + 0.2 * Math.sin((t - 1.1) * 1.6) * seg(t, 1.1, 1.6));
+  $("halo").style.transform = `scale(${lerp(0.5, 1, glow)})`;
+  rise($("end-title"), 0.3, 10);
+  rise($("end-sub"), 0.5, 10);
+  rise($("end-name"), 0.75, 6);
+  $("end").style.opacity = t < 0 || t > length ? 0 : 1;
+}
+
+// ---- One frame ----
+const SCENE = { s1: scene1, s2: scene2, s3: scene3, s4: scene4, s5: scene5 };
+function render(time) {
+  const t = ((time % DURATION) + DURATION) % DURATION;
+  // The background glows drift slowly, once around per loop.
+  const turn = (2 * Math.PI * t) / DURATION, stage = $("stage").style;
+  stage.setProperty("--ax", `${28 + 7 * Math.sin(turn)}%`);
+  stage.setProperty("--ay", `${8 + 5 * Math.cos(turn)}%`);
+  stage.setProperty("--bx", `${86 - 8 * Math.sin(turn + 1)}%`);
+  stage.setProperty("--by", `${96 - 6 * Math.cos(turn + 1)}%`);
+
+  let caption = null, kicker = null, sub = "", capLocal = 0, capOut = 0;
+  for (const sc of SCENES) {
+    const el = $(sc.id), local = t - sc.start, length = sc.end - sc.start;
+    const active = local >= 0 && local < length;
+    let row = "";
+    if (sc.id === "end") {
+      if (active) scene6(local, length); else el.style.opacity = 0;
+    } else {
+      // A window is on stage from the start of its arrival to the end of its departure.
+      const { enter, exit } = MOVES[sc.id], after = local - length;
+      const live = local >= enter[1] && after < exit[2];
+      el.style.opacity = live ? 1 : 0;
+      place(el, null, 0);   // at rest while the scene lays itself out and measures
+      if (!live) continue;
+      row = SCENE[sc.id](local);
+      if (exit[0] === "genieOut") {
+        // The yellow button dips just before the window minimizes.
+        const at = exit[1] - 0.14, dip = seg(after, at - 0.08, at) * (1 - seg(after, at + 0.1, at + 0.2));
+        el.querySelector(".lights i:nth-child(2)").style.filter = dip > 0 ? `brightness(${1 - 0.4 * dip})` : "none";
+      }
+      const outU = seg(after, exit[1], exit[2]), inU = seg(local, enter[1], enter[2]);
+      if (outU > 0) place(el, exit[0], outU); else if (inU < 1) place(el, enter[0], inU);
+    }
+    if (!active) continue;
+    caption = sc.caption;
+    kicker = sc.kicker || null;
+    sub = row;
+    // The genie sweeps through the caption's place: the words leave ahead of it.
+    const move = MOVES[sc.id] || {}, lead = move.exit && move.exit[0] === "genieOut" ? -move.exit[1] + 0.12 : 0.35;
+    capLocal = local;
+    capOut = easeInOut(seg(local, length - lead, length - lead + 0.3));
+  }
+  // The caption arrives a word at a time and leaves as one.
+  const cap = $("caption"), subEl = $("sub");
+  cap.innerHTML = !caption ? "" : caption.split(" ").map((word, i) => {
+    const u = easeOut(seg(capLocal, 0.12 + 0.07 * i, 0.5 + 0.07 * i));
+    return `<span style="display:inline-block; opacity:${u}; transform:translateY(${lerp(9, 0, u)}px); filter:blur(${lerp(3, 0, u)}px)">${esc(word)}</span>`;
+  }).join(" ");
+  cap.style.opacity = caption ? 1 - capOut : 0;
+  // A scene with a smaller line above its caption moves the caption and its row down to make room.
+  const down = kicker ? 16 : 0;
+  cap.style.transform = `translateY(${down - 5 * capOut}px)`;
+  const kick = $("kicker"), kickIn = easeOut(seg(capLocal, 0.05, 0.4));
+  kick.textContent = kicker || "";
+  kick.style.opacity = kicker ? kickIn * (1 - capOut) : 0;
+  kick.style.transform = `translateY(${lerp(6, 0, kickIn) - 5 * capOut}px)`;
+  const subIn = easeOut(seg(capLocal, 0.3, 0.75));
+  subEl.innerHTML = caption ? sub : "";
+  subEl.style.opacity = caption ? subIn * (1 - capOut) : 0;
+  subEl.style.transform = `translateY(${down + lerp(8, 0, subIn) - 7 * capOut}px)`;
+}
+window.render = render;
+
+// ---- Loading: the effect frames and the icon, all decoded before the first frame ----
+window.ready = (async () => {
+  $("icon").src = params.get("icon") || "../../Resources/AppIcon-1024.png";
+  const jobs = [$("icon").decode().catch(() => {})];
+  for (const name of ["mic"]) {
+    const img = new Image();
+    img.src = `${framesBase}/glyph-${name}.png`;
+    jobs.push(img.decode());
+  }
+  manifest = await (await fetch(`${framesBase}/manifest.json`)).json();
+  for (const shot of manifest.shots) {
+    shots[shot.name] = shot;
+    shot.images = Array.from({ length: shot.frames }, (_, i) => {
+      const img = new Image();
+      img.src = `${framesBase}/${shot.name}/${String(i).padStart(4, "0")}.png`;
+      jobs.push(img.decode());
+      return img;
+    });
+  }
+  await Promise.all(jobs);
+  await document.fonts.ready;
+  render(0);
+  return true;
+})();
+
+if (params.get("play")) {
+  window.ready.then(() => {
+    const t0 = performance.now();
+    const tick = () => { render((performance.now() - t0) / 1000); requestAnimationFrame(tick); };
+    tick();
+  });
+}
+</script>
+</body>
+</html>

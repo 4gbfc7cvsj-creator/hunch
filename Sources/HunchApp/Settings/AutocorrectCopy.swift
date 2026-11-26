@@ -1,0 +1,20 @@
+/// Titles and explanations of the autocorrect switches, shared by Settings → Autocorrect and the tour.
+enum AutocorrectCopy {
+    static let suggestTitle = "Suggest Corrections"
+    static let suggestInfo = "The misspelled word is struck through with the fix after it, and Tab applies it. Esc dismisses it. Names you use often are learned and never flagged. Works with suggestions off too."
+    static let automaticTitle = "Apply Corrections Automatically"
+    static let automaticInfo = "Misspelled words are fixed as you finish them instead of waiting for Tab (not in terminals or code). Press Backspace right after a fix to get your word back."
+    static let strengthTitle = "Strength"
+    static let rewritePauseTitle = "Reread after a pause of"
+    static let rewritePauseInfo = "With Strong, how long you stop typing before the model rereads what you're writing and fixes it. A sentence end starts it at once."
+    static let strengthInfo = "How far autocorrect goes. Light fixes only what the system spell checker is sure of and never uses the model. Balanced (default) also lets the model choose between likely words and catch slips that are real words. Strong also rereads what you're writing whenever you pause, and fixes missing or doubled words and grammar slips while keeping your wording; it needs Apply Corrections Automatically and never runs in Efficiency."
+    static let strongNeedsAutomatic = "Strong needs Apply Corrections Automatically."
+    static let capitalizationTitle = "Auto-capitalization"
+    static let capitalizationInfo = "Fixes capitals: THe \u{2192} The, tHIS \u{2192} This, i \u{2192} I, monday \u{2192} Monday, iphone \u{2192} iPhone, and capitalizes the first word of a sentence (after . ! ? or a new line). Skips abbreviations like Dr. and e.g., decimals, links and file names. Off in Chats by default."
+    static let punctuationTitle = "Fix punctuation"
+    static let punctuationInfo = "Adds missing apostrophes (dont \u{2192} don\u{2019}t) and fixes spaces around punctuation and doubled spaces. Off in Chats by default."
+    static let confusedTitle = "Fix commonly confused words"
+    static let confusedInfo = "Fixes their/there/they\u{2019}re, your/you\u{2019}re, its/it\u{2019}s, then/than and a few more pairs, only when the sentence clearly calls for the other word. Off in Chats by default."
+    static let shorthandTitle = "Allow chat shorthand"
+    static let shorthandInfo = "Shorthand like \u{201C}u\u{201D}, \u{201C}thx\u{201D} and \u{201C}gonna\u{201D} stays as typed. Apps and sites choose in Apps & Sites; on in Chats by default. Turn it off here to correct shorthand everywhere."
+}

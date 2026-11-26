@@ -1,0 +1,10 @@
+{
+  "name": "base-document-ci",
+  "framer": "auto",
+  "length": "medium",
+  "decode": {},
+  "promptTokenBudget": 1024,
+  "customInstructionsFile": "eval/local/custom-instructions.txt",
+  "addBOS": null,
+  "postConfidenceFloor": null
+}

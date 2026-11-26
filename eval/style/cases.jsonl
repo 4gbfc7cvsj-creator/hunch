@@ -1,0 +1,30 @@
+{"id":"st-01","tags":["style"],"before":"ok bet, i'll see u at the ","surface":"chat","aiTrap":false,"expect":["shed"]}
+{"id":"st-02","tags":["style"],"before":"quick update: the new build of ","surface":"chat","aiTrap":false,"expect":["tidepool"]}
+{"id":"st-03","tags":["style"],"before":"can you ask ","surface":"chat","aiTrap":false,"expect":["jules","dani"]}
+{"id":"st-04","tags":["style"],"before":"ok gotta run, ","surface":"chat","aiTrap":false,"expect":["ttyl","later"]}
+{"id":"st-05","tags":["style"],"before":"ngl this cafe is ","surface":"chat","aiTrap":false,"expect":["lowkey","kinda","mid","actually","fr"]}
+{"id":"st-06","tags":["style"],"before":"i booked the ","surface":"chat","aiTrap":false,"expect":["kiln","shed"]}
+{"id":"st-07","tags":["style"],"before":"thx for the ride!! i owe u one fr. -","surface":"chat","aiTrap":false,"expect":["mo"]}
+{"id":"st-08","tags":["style"],"before":"standup today was ","surface":"chat","aiTrap":false,"expect":["kinda","lowkey","chaotic","mid","a","too","so"]}
+{"id":"st-09","tags":["style"],"before":"hey dani, did you move the ","surface":"chat","aiTrap":false,"expect":["bike","scissors","clay","mugs","kiln"]}
+{"id":"st-10","tags":["style"],"before":"im ","surface":"chat","aiTrap":false,"expect":["gonna","lowkey","kinda","at","so","about","on"]}
+{"id":"st-11","tags":["style"],"before":"jules, the tidepool ","surface":"chat","aiTrap":false,"expect":["build","beta","bug","pr","sync","demo","login","crash"]}
+{"id":"st-12","tags":["style"],"before":"later ","surface":"chat","aiTrap":false,"expect":["gator"]}
+{"id":"st-13","tags":["style"],"before":"that glaze came out ","surface":"chat","aiTrap":false,"expect":["kinda","lowkey","weird","green","so","way","pretty"]}
+{"id":"st-14","tags":["style"],"before":"we should ship it ","surface":"chat","aiTrap":false,"expect":["friday","thursday","tmrw","tomorrow","fr"]}
+{"id":"st-15","tags":["style"],"before":"tbh i think ","surface":"chat","aiTrap":false,"expect":["we","the","its","it","dani","jules","tidepool"]}
+{"id":"st-16","tags":["style"],"before":"gonna head to the ","surface":"chat","aiTrap":false,"expect":["shed"]}
+{"id":"st-17","tags":["style"],"before":"this playlist is lowkey ","surface":"chat","aiTrap":false,"expect":["obsessed","elite","fire","immaculate","perfect","good","amazing"]}
+{"id":"st-18","tags":["style"],"before":"sorry i missed ur ","surface":"chat","aiTrap":false,"expect":["call","text","message"]}
+{"id":"st-19","tags":["style"],"before":"pls review my ","surface":"chat","aiTrap":false,"expect":["tidepool","pr"]}
+{"id":"st-20","tags":["style"],"before":"bring ur ","surface":"chat","aiTrap":false,"expect":["mugs","mug","bike","laptop","snacks","sunscreen"]}
+{"id":"ne-01","tags":["neutral"],"before":"The meeting is scheduled for","surface":"email","aiTrap":false,"expect":["tomorrow","monday","tuesday","wednesday","thursday","friday","next","10","9","3","2","noon","the","april","may","june"]}
+{"id":"ne-02","tags":["neutral"],"before":"Thank you for your","surface":"email","aiTrap":false,"expect":["email","message","help","time","reply","patience","quick","response","feedback","note","order","interest"]}
+{"id":"ne-03","tags":["neutral"],"before":"Please find the attached","surface":"email","aiTrap":false,"expect":["document","file","report","invoice","copy","contract","form","resume","agenda","summary","spreadsheet"]}
+{"id":"ne-04","tags":["neutral"],"before":"The capital of France is","surface":"document","aiTrap":false,"expect":["paris","a","the","one","located","known"]}
+{"id":"ne-05","tags":["neutral"],"before":"In this paper, we propose a","surface":"document","aiTrap":false,"expect":["novel","new","method","simple","framework","approach","general","scalable","model"]}
+{"id":"ne-06","tags":["neutral"],"before":"Dear Dr. Patel,","surface":"email","aiTrap":false,"expect":["i","thank","thanks","it","please","we","my","just","following","hope"]}
+{"id":"ne-07","tags":["neutral"],"before":"To set up the package, run","surface":"document","aiTrap":false,"expect":["the","pip","npm","brew","this","`","sudo","cargo","apt","yarn"]}
+{"id":"ne-08","tags":["neutral"],"before":"The quarterly results show that revenue","surface":"document","aiTrap":false,"expect":["increased","grew","rose","was","has","declined","fell","is","for","in","from","exceeded","dropped"]}
+{"id":"ne-09","tags":["neutral"],"before":"I would like to schedule a","surface":"email","aiTrap":false,"expect":["call","meeting","time","follow","demo","visit","brief","quick","appointment","phone","check"]}
+{"id":"ne-10","tags":["neutral"],"before":"Once upon a","surface":"document","aiTrap":false,"expect":["time"]}

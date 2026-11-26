@@ -1,0 +1,12 @@
+{
+  "name": "chat-v1-k2",
+  "framer": "chat-prefill-v1",
+  "length": "medium",
+  "decode": {
+    "firstTokenFanout": 2
+  },
+  "promptTokenBudget": 1024,
+  "customInstructionsFile": null,
+  "addBOS": null,
+  "postConfidenceFloor": null
+}

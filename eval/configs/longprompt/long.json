@@ -1,0 +1,10 @@
+{
+  "name": "long-4k",
+  "framer": "auto",
+  "length": "medium",
+  "decode": {},
+  "promptTokenBudget": 3584,
+  "customInstructionsFile": "eval/local/custom-instructions.txt",
+  "addBOS": null,
+  "postConfidenceFloor": null
+}

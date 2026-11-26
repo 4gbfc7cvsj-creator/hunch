@@ -1,0 +1,1 @@
+{"name":"instruct-chat-v5-ci","framer":"chat-prefill-v5","length":"medium","decode":{},"promptTokenBudget":1024,"customInstructionsFile":"eval/local/custom-instructions.txt","addBOS":null,"postConfidenceFloor":null}

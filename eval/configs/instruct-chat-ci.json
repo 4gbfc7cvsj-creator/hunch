@@ -1,0 +1,10 @@
+{
+  "name": "instruct-chat-ci",
+  "framer": "chat-prefill-v1",
+  "length": "medium",
+  "decode": {},
+  "promptTokenBudget": 1024,
+  "customInstructionsFile": "eval/local/custom-instructions.txt",
+  "addBOS": null,
+  "postConfidenceFloor": null
+}

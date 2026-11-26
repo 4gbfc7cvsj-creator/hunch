@@ -1,0 +1,15 @@
+{
+  "name": "full",
+  "screen": true,
+  "windowTitle": true,
+  "clipboard": true,
+  "about": "Name: Alex Morgan. I work as a product manager at a software company in Seattle. I write casually with friends and family and clearly at work.",
+  "styleExamples": 2,
+  "languages": [
+    "en-US",
+    "zh-Hant-TW"
+  ],
+  "preferredHan": "traditional",
+  "screenTokenLimit": 3500,
+  "persona": "eval/replay/persona.json"
+}

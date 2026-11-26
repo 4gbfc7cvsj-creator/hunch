@@ -1,0 +1,20 @@
+{"id":"bf-01","kind":"fit","before":"We deploy all our services on","surface":"chat","learned":["Kubernetes"]}
+{"id":"bf-02","kind":"fit","before":"The latency dashboards live in","surface":"chat","learned":["Grafana"]}
+{"id":"bf-03","kind":"fit","before":"Please forward the invoice to Mr.","surface":"email","learned":["Okonkwo","Vasquez"]}
+{"id":"bf-04","kind":"fit","before":"I'll ask Dr.","surface":"chat","learned":["Okonkwo","Vasquez"]}
+{"id":"bf-05","kind":"fit","before":"Let's cover that during tomorrow's","surface":"chat","learned":["standup","postmortem"]}
+{"id":"bf-06","kind":"fit","before":"The release is codenamed","surface":"note","learned":["Zephyrus"]}
+{"id":"bf-07","kind":"fit","before":"After the outage we wrote a","surface":"document","learned":["postmortem"]}
+{"id":"bf-08","kind":"fit","before":"Our offsite next spring will be in","surface":"email","learned":["Lisbon"]}
+{"id":"bf-09","kind":"fit","before":"The cluster keeps evicting pods, so I restarted","surface":"chat","learned":["Kubernetes","Grafana"]}
+{"id":"bf-10","kind":"fit","before":"Thanks for your help, Ms.","surface":"email","learned":["Okonkwo","Vasquez"]}
+{"id":"bn-01","kind":"nofit","before":"Let's grab lunch at","surface":"chat","learned":[]}
+{"id":"bn-02","kind":"nofit","before":"I need to buy milk and","surface":"chat","learned":[]}
+{"id":"bn-03","kind":"nofit","before":"Happy birthday! I hope your day is","surface":"chat","learned":[]}
+{"id":"bn-04","kind":"nofit","before":"The weather today is","surface":"chat","learned":[]}
+{"id":"bn-05","kind":"nofit","before":"Could you please send me the","surface":"email","learned":[]}
+{"id":"bn-06","kind":"nofit","before":"My favorite book is","surface":"note","learned":[]}
+{"id":"bn-07","kind":"nofit","before":"Remember to water the plants and","surface":"chat","learned":[]}
+{"id":"bn-08","kind":"nofit","before":"I'm feeling a bit","surface":"chat","learned":[]}
+{"id":"bn-09","kind":"nofit","before":"Dear team, I wanted to share","surface":"email","learned":[]}
+{"id":"bn-10","kind":"nofit","before":"After dinner we","surface":"chat","learned":[]}

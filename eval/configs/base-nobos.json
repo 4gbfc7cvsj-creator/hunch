@@ -1,0 +1,10 @@
+{
+  "name": "base-nobos",
+  "framer": "auto",
+  "length": "medium",
+  "decode": {},
+  "promptTokenBudget": 1024,
+  "customInstructionsFile": null,
+  "addBOS": false,
+  "postConfidenceFloor": null
+}

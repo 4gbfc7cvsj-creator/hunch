@@ -1,0 +1,10 @@
+{
+  "name": "fresh",
+  "screen": false,
+  "windowTitle": false,
+  "clipboard": false,
+  "about": "Name: Alex Morgan.",
+  "styleExamples": 0,
+  "languages": ["en-US", "zh-Hant-TW"],
+  "preferredHan": "traditional"
+}

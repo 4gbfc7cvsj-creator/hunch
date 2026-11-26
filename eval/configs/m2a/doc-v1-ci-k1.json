@@ -1,0 +1,12 @@
+{
+  "name": "doc-v1-ci-k1",
+  "framer": "document-v1",
+  "length": "medium",
+  "decode": {
+    "firstTokenFanout": 1
+  },
+  "promptTokenBudget": 1024,
+  "customInstructionsFile": "eval/local/custom-instructions.txt",
+  "addBOS": null,
+  "postConfidenceFloor": null
+}
