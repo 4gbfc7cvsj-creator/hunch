@@ -116,6 +116,22 @@ xattr -dr com.apple.quarantine /Applications/Hunch.app
 
 Run the tests with `swift test`. `scripts/make-dmg.sh` packages the built app as a disk image.
 
+## Updates
+
+What's new in **1.0.1** ([download](../../releases/latest)):
+
+- Suggestions stop at the text field's right edge on a whole word; the rest shows once your typing wraps to the next line.
+- Autocorrect: undo an automatic fix with a quick double (or triple) Backspace.
+- Write for me: no made-up reference material when there's little or nothing on screen; the draft's effect plays one whole line at a time.
+- Quick replies follow the message box when it moves after the chips show.
+- Shortcut recorder: real F-key names, refuses keys that type text without a modifier, and warns when two shortcuts share keys.
+- Learned words can start after Chinese text, curly quotes or dashes.
+- Settings: explanations behind the ⓘ icons, tips in section footers, and links between panes.
+- Hunch's data files can only be read by your user account.
+- Smaller fixes in Settings and Quick replies.
+
+Earlier versions are on the wiki's [Updates](../../wiki/Updates) page.
+
 ## Learn more
 
 The [wiki](../../wiki) is the full manual: every setting, the keyboard shortcuts, what Hunch keeps on
