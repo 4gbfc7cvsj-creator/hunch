@@ -348,3 +348,35 @@ private func bias(_ pairs: [(String, Float)], strength: Float = 1) -> LearnedBia
         #expect(first > 0 && first < 8)
     }
 }
+
+/// An entry may start after a whole character that ends a word, judged per character, not per
+/// UTF-8 byte (CJK text, curly quotes and dashes are all non-ASCII).
+@Suite struct BiasWordStartTests {
+    private func bonus(_ entry: String, after pieces: [String], next: String) throws -> Float {
+        let classes = TokenClassCache.shared.classes(for: v)
+        let compiled = try #require(CompiledBias.make(vocabulary: v, classes: classes,
+                                                      entries: [.init(text: entry, weight: 1)]))
+        var state = BiasState()
+        for piece in pieces { compiled.advance(&state, Array(piece.utf8)[...]) }
+        return compiled.map(state, strength: 1)[v.id(next)] ?? 0
+    }
+
+    @Test func chineseEntryStartsAfterChineseText() throws {
+        #expect(try bonus("今天", after: ["我", "们"], next: "今") > 0)
+        #expect(try bonus("今天", after: ["好", "的"], next: "今") > 0)
+    }
+
+    @Test func chineseEntryKeepsGoingAfterItsFirstCharacter() throws {
+        #expect(try bonus("今天", after: ["好", "今"], next: "天") > 0)
+    }
+
+    @Test func entryStartsAfterADash() throws {
+        #expect(try bonus(" Sam", after: [" Thanks", "—"], next: "Sam") > 0)
+    }
+
+    @Test func entryDoesNotStartInsideALatinWord() throws {
+        #expect(try bonus(" Sam", after: [" Thanks", "é"], next: "Sam") == 0)
+        #expect(try bonus(" Sam", after: ["note"], next: "Sam") == 0)
+        #expect(try bonus(" Sam", after: ["note"], next: " Sam") > 0)  // with its space it still starts
+    }
+}

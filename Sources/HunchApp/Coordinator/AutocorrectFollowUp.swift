@@ -46,7 +46,10 @@ final class AutocorrectFollowUp {
     /// Host access, from the app delegate (focus tracker, keyboard monitor, inserter, overlay).
     struct Hooks {
         var setCatchUpWaiting: (Bool) -> Void = { _ in }
-        var armBackspaceUndo: (Bool) -> Void = { _ in }
+        /// On/off, and the double-tap window in ms (0: the first Backspace undoes).
+        /// On/off, the double-tap window in ms (0: the first Backspace undoes), and how many more
+        /// quick presses may follow the undo (a reread put back in stages).
+        var armBackspaceUndo: (Bool, Int, Int) -> Void = { _, _, _ in }
         var holdKeys: () -> Void = {}
         var releaseHeldKeys: () -> Void = {}
         var isHoldingKeys: () -> Bool = { false }
@@ -162,8 +165,14 @@ final class AutocorrectFollowUp {
             fixRejected(word, field: context.field)
         }
         if let kept = rejections.takeKept() { learning?.noteFixKept(word: kept.word, fix: kept.fix) }
-        undo.update(field: context.field, before: context.before)
-        if !undo.isArmed { disarmUndo() }
+        if undo.update(field: context.field, before: context.before) {
+            // Double-tap: the typed-on text is gone again, so Backspace may undo once more.
+            hooks.armBackspaceUndo(true, undoDoubleTapMs, undoNextStage == nil ? 0 : 1)
+            undoPublished = true
+            Self.log("undo: re-armed")
+        } else if !undo.isAlive {
+            disarmUndo("by a read")
+        }
         let historyChanged = history.update(field: context.field, before: context.before, after: context.after)
         marksRead = (context.field, context.before, context.after, context.selectionLength)
         if historyChanged || !history.isEmpty || marksShown { refreshMarks(field: context.field) }
@@ -183,19 +192,63 @@ final class AutocorrectFollowUp {
     func noteEscaped() { missed.escaped() }
     func noteAccepted() { missed.accepted() }
 
-    /// A key the taps let through reached the app: Backspace no longer undoes an automatic fix.
-    func noteKeyDown() {
-        undo.otherKey()
+    /// A key the taps let through reached the app: Backspace no longer undoes an automatic fix,
+    /// except the first Backspace of a double-tap (the monitor keeps the undo armed for a second).
+    func noteKeyDown(plainBackspace: Bool) {
+        if undo.isArmed { Self.log("undo: key reported (backspace \(plainBackspace))") }
         hooks.dismissFixOffer()
+        if undoDoubleTapMs > 0, undo.isAlive {
+            // Double-tap: the first Backspace keeps the undo armed for a second one.
+            if plainBackspace, undo.isArmed {
+                undo.firstBackspace()
+                if undo.isArmed { return }
+            }
+            // Any other key (or a late Backspace) pauses it; backspacing over the typed-on text
+            // re-arms it (see `noteContext`). The monitor disarmed itself on the key.
+            if undo.isAlive {
+                if !undo.isSuspended { Self.log("undo: paused") }
+                undo.suspend()
+                undoPublished = false
+                return
+            }
+        }
+        undo.otherKey()
         undoPublished = false  // the monitor ends it on any key by itself
     }
 
+    /// The double-tap window the undo was armed with (0: a single Backspace undoes).
+    private var undoDoubleTapMs = 0
+
     private var undoPublished = false
 
-    private func disarmUndo() {
+    /// The reread the armed Backspace undo takes back (nil: it is an automatic word fix).
+    private var undoPass: PassRecord?
+
+    /// A reread undone in stages: after the nearest change goes back, a quick further Backspace
+    /// takes back the rest (`id`: the nearest change's underline entry).
+    private struct UndoStage {
+        var id: Int?
+        var beforeFix: String
+        var original: String
+        var fix: String
+        var trailing: String
+    }
+    private var undoNextStage: UndoStage?
+
+    private func armBackspaceUndo(after what: String, stage: UndoStage? = nil) {
+        undoPass = nil
+        undoNextStage = stage
+        undoDoubleTapMs = max(0, settings().autocorrectUndoDoubleTapMs)
+        hooks.armBackspaceUndo(true, undoDoubleTapMs, stage == nil ? 0 : 1)
+        undoPublished = true
+        Self.log("undo: armed after \(what) (double-tap \(undoDoubleTapMs) ms)")
+    }
+
+    private func disarmUndo(_ why: String = "") {
         guard undoPublished else { return }
+        Self.log("undo: disarmed \(why)")
         undoPublished = false
-        hooks.armBackspaceUndo(false)
+        hooks.armBackspaceUndo(false, 0, 0)
     }
 
     /// Focus left the field, it was blocked, or secure input began: forget everything.
@@ -624,14 +677,28 @@ final class AutocorrectFollowUp {
     /// Backspace straight after an automatic fix (consumed by the keyboard monitor).
     func undoAutoFix(field: FieldID?, app: AppIdentity?, policy: AppPolicy?) {
         undoPublished = false  // the monitor used it up
+        Self.log("undo: command (busy \(busy), armed \(undo.isArmed))")
+        if busy, undoRunning, let field, let app, let policy {
+            // A quick further press while the last stage is still typing: it runs right after.
+            queuedUndo = (field, app, policy)
+            return
+        }
         guard let field, let app, let policy, !busy else {
             if let app { _ = hooks.pressKey(51, false, app) }  // pass the Backspace on
             return
         }
         busy = true
+        undoRunning = true
         hooks.holdKeys()
         Task { @MainActor in
-            defer { finish(field: field) }
+            defer {
+                undoRunning = false
+                finish(field: field)
+                if let next = queuedUndo {
+                    queuedUndo = nil
+                    undoAutoFix(field: next.field, app: next.app, policy: next.policy)
+                }
+            }
             guard let fresh = await hooks.readNow(field), fresh.field == field, fresh.selectionLength == 0,
                   let plan = undo.backspace(field: field, before: fresh.before) else {
                 // Can't tell the fix is still there: the Backspace does what it always does.
@@ -647,16 +714,54 @@ final class AutocorrectFollowUp {
                                        mode: policy.insertion, chunkSize: policy.injectionChunkSize ?? 16,
                                        workarounds: policy.insertionWorkarounds)
             let restored = String(fresh.before.dropLast(plan.deleteCount)) + plan.text
+            let stage = undoPass == nil ? nil : undoNextStage
+            undoNextStage = nil
+            if let id = stage?.id {
+                // The nearest change goes back on its own: its underline goes, the others follow the text.
+                forgetFix(id: id, field: field)
+                undoPass?.ids.remove(id)
+            }
             if let shown = await awaitRead(field, until: {
                 CatchUpPlan.unchanged(before: $0.before, originalBefore: restored)
             }) {
-                editApplied(field: field, after: restored, from: fixed, to: plan.text)
+                editApplied(field: field, after: restored, from: fixed, to: plan.text,
+                            historyDone: undoPass != nil && stage == nil)
                 await highlight(field: field, back: plan.text.utf16.count, length: plan.word.utf16.count, when: shown)
             }
-            // Kept in this field; learned only once what follows shows a clean rejection.
-            restoredWords.insert(field: field, word: plan.word)
-            rejections.undone(field: field, word: plan.word)
+            if let stage {
+                // A quick further Backspace takes back the rest of the reread (the monitor stays armed).
+                undo.appliedTapped(field: field, beforeFix: stage.beforeFix, original: stage.original,
+                                   fix: stage.fix, trailing: stage.trailing)
+                undoPublished = true
+                rewriteChecked = (field, restored)
+                Self.log("undo: nearest reread change put back")
+            } else if let pass = undoPass {
+                // A whole reread taken back: its words stay as typed here.
+                for id in pass.ids { forgetFix(id: id, field: field) }
+                rewriteChecked = (field, restored)
+                undoPass = nil
+                Self.log("undo: reread put back (\(pass.ids.count) changes)")
+            } else {
+                // Kept in this field; learned only once what follows shows a clean rejection.
+                restoredWords.insert(field: field, word: plan.word)
+                rejections.undone(field: field, word: plan.word)
+            }
+            lastPass = nil  // a reread undone this way is gone
         }
+    }
+
+    /// An undo is typing; a quick further undo press waits in `queuedUndo` until it is done.
+    private var undoRunning = false
+    private var queuedUndo: (field: FieldID, app: AppIdentity, policy: AppPolicy)?
+
+    /// A reread's change put back: its words stay as typed in this field and its underline goes.
+    private func forgetFix(id: Int, field: FieldID) {
+        if let fix = history.entry(id: id) {
+            for w in fix.original.split(whereSeparator: \.isWhitespace) {
+                restoredWords.insert(field: field, word: String(w))
+            }
+        }
+        history.remove(id: id)
     }
 
     /// A clean rejection of an automatic fix: the word is not fixed again in this field (it may have
@@ -811,8 +916,7 @@ final class AutocorrectFollowUp {
         undo.applied(field: field, beforeFix: fresh.before, original: fix.word, fix: fix.replacement, trailing: edit.tail)
         rejections.fixApplied(field: field, beforeFix: fresh.before, word: fix.word, fix: fix.replacement,
                               trailing: edit.tail)
-        hooks.armBackspaceUndo(true)
-        undoPublished = true
+        armBackspaceUndo(after: "fix")
         await highlight(field: field, back: edit.fixed.utf16.count, length: fix.replacement.utf16.count, when: shown)
         return edit.after
     }
@@ -1038,7 +1142,9 @@ final class AutocorrectFollowUp {
         var state = fresh.before
         var shift = 0
         var ids = Set<Int>()
+        var nearestID: Int?  // the last change's entry (changes run left to right)
         for change in changes {
+            nearestID = nil
             let e = change.edit
             var moved = change
             moved.edit.range = (e.range.lowerBound + shift)..<(e.range.upperBound + shift)
@@ -1057,6 +1163,7 @@ final class AutocorrectFollowUp {
                                            replacement: r.replacement, tail: tail, automatic: true,
                                            typed: change.typed == nil ? nil : typed) {
                     ids.insert(id)
+                    nearestID = id
                 }
             }
             state = next
@@ -1067,6 +1174,26 @@ final class AutocorrectFollowUp {
         undo.reset()
         disarmUndo()
         Self.log("rewrite: applied \(edits.count) changes (retyped \(old.count) → \(new.count))")
+        // Double-tap: the change nearest the caret goes back first, a quick third press takes back the
+        // rest. Otherwise Backspace undoes the whole reread like an automatic fix.
+        if edits.count > 1, settings().autocorrectUndoDoubleTapMs > 0,
+           let nearest = edits.max(by: { $0.range.lowerBound < $1.range.lowerBound }),
+           let s = SingleWordChange.staged(
+               old: old, partial: String(FieldRewrite.apply(edits.filter { $0 != nearest }, to: fresh.before)
+                   .dropFirst(head.count)),
+               new: new) {
+            undo.applied(field: field, beforeFix: head + s.partial + s.trailing, original: s.partial, fix: s.new,
+                         trailing: s.trailing)
+            armBackspaceUndo(after: "reread, in stages",
+                             stage: UndoStage(id: nearestID, beforeFix: head + s.old + s.trailing, original: s.old,
+                                              fix: s.partial, trailing: s.trailing))
+            undoPass = lastPass
+        } else if let stretch = SingleWordChange.split(old: old, new: new, wholeStretch: true) {
+            undo.applied(field: field, beforeFix: fresh.before, original: stretch.original, fix: stretch.fix,
+                         trailing: stretch.trailing)
+            armBackspaceUndo(after: "reread")
+            undoPass = lastPass
+        }
         await highlight(field: field, back: new.utf16.count, length: new.utf16.count, when: shown)
         return after
     }

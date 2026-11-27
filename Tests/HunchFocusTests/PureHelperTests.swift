@@ -269,6 +269,17 @@ private func context(_ before: String, field: FieldID) -> TextContext {
     #expect(emits(&d, .focusLost))
 }
 
+@Test func dedupEmitsWhenOnlyTheFieldFrameChanges() {
+    var d = EmissionDeduper()
+    let f = FieldID(pid: 1, elementHash: 2, generation: 1)
+    let caret = CGRect(x: 10, y: 10, width: 1, height: 16)
+    let before = CaretGeometry(caretRect: caret, fieldFrame: CGRect(x: 0, y: 0, width: 400, height: 40), quality: .estimated)
+    let after = CaretGeometry(caretRect: caret, fieldFrame: CGRect(x: 0, y: 0, width: 600, height: 44), quality: .estimated)
+    #expect(emits(&d, .context(context("", field: f), before)))
+    #expect(!emits(&d, .context(context("", field: f), before)))
+    #expect(emits(&d, .context(context("", field: f), after)))
+}
+
 @Test func dedupRecordSuppressesFollowUp() {
     var d = EmissionDeduper()
     d.record(.blocked(.trackingPaused, nil))

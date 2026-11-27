@@ -86,6 +86,8 @@ public final class WriteForMePanel: NSObject, NSTextFieldDelegate {
     /// When the last piece started so far is done, and the reveal of the whole draft that follows a
     /// finished draft's last piece (in case a piece's own reveal never comes).
     private var piecesEnd = Date.distantPast
+    /// When the next line may start its pop-in: lines play one after another, never two at once.
+    private var nextLineStart = Date.distantPast
     private var revealRest: DispatchWorkItem?
     private var effectsOn: Bool {
         effectLook != nil && !effects.recipe(tweaks: GhostTweaks()).isEmpty
@@ -389,22 +391,32 @@ public final class WriteForMePanel: NSObject, NSTextFieldDelegate {
 
     // MARK: Effect
 
-    /// Starts the pop-in on the words that have come in since the last piece: one ghost per line they
-    /// cover, drawn over the hidden text, which shows again when its ghost has settled. A word still
-    /// being written waits (it could still wrap); `finished` plays the rest.
+    /// Starts the pop-in on the lines that have filled up since the last piece: one ghost per line,
+    /// drawn over the hidden text, which shows again when its ghost has settled. Lines play one after
+    /// another, each once the one before has played. The line still being written waits (a piece of
+    /// it would play on its own and break the line in two); `finished` plays the rest.
     private func flushEffects(finished: Bool) {
         let ns = effectText as NSString
         guard let storage = draftView.textStorage, storage.length == ns.length else { return }
-        let end = EffectWrap.readyEnd(ns, from: played, finished: finished)
+        var end = EffectWrap.readyEnd(ns, from: played, finished: finished)
         guard end > played else { return }
-        let range = NSRange(location: played, length: end - played)
-        played = end
         guard let layout = draftView.layoutManager, let container = draftView.textContainer,
               let window = draftView.window else {
-            reveal(range)
+            reveal(NSRange(location: played, length: end - played))
+            played = end
             return
         }
         layout.ensureLayout(for: container)
+        if !finished, ns.length > 0, ns.character(at: ns.length - 1) != 0x0A {
+            // Only whole lines: stop where the last line (still filling) starts.
+            var lastLine = NSRange()
+            let lastGlyph = layout.glyphIndexForCharacter(at: ns.length - 1)
+            layout.lineFragmentRect(forGlyphAt: lastGlyph, effectiveRange: &lastLine)
+            end = min(end, layout.characterRange(forGlyphRange: lastLine, actualGlyphRange: nil).location)
+            guard end > played else { return }
+        }
+        let range = NSRange(location: played, length: end - played)
+        played = end
         let glyphs = layout.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
         var lines: [(glyphs: NSRange, rect: CGRect)] = []
         layout.enumerateLineFragments(forGlyphRange: glyphs) { rect, _, _, lineGlyphs, _ in
@@ -432,12 +444,17 @@ public final class WriteForMePanel: NSObject, NSTextFieldDelegate {
             let id = nextPiece
             nextPiece += 1
             hiddenRanges[id] = chars
-            let seconds = effects.playPiece(presentation, color: .labelColor) { [weak self] in
+            let now = Date()
+            let delay = max(0, nextLineStart.timeIntervalSince(now))
+            let seconds = effects.playPiece(presentation, color: .labelColor, after: delay) { [weak self] in
                 guard let self, let r = self.hiddenRanges.removeValue(forKey: id) else { return }
                 self.reveal(r)
             }
             if let seconds {
-                piecesEnd = max(piecesEnd, Date().addingTimeInterval(seconds))
+                let start = now.addingTimeInterval(delay)
+                piecesEnd = max(piecesEnd, start.addingTimeInterval(seconds))
+                let gap = EffectWrap.streamGap(effects.recipe(tweaks: presentation.tweaks), characters: piece.count)
+                nextLineStart = start.addingTimeInterval(gap)
             } else {
                 hiddenRanges[id] = nil
                 reveal(chars)
@@ -469,6 +486,7 @@ public final class WriteForMePanel: NSObject, NSTextFieldDelegate {
         revealRest?.cancel()
         revealRest = nil
         piecesEnd = .distantPast
+        nextLineStart = .distantPast
         let wasPlaying = !hiddenRanges.isEmpty || played < (effectText as NSString).length
         effects.hideAll()
         hiddenRanges = [:]

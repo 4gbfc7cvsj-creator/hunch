@@ -236,3 +236,117 @@ private func typedPast(_ t: inout MissedFixTracker<Int>, field: Int = 1, before:
     let r11 = u.backspace(field: 1, before: "a teh ")
     #expect(r11 == nil)  // the fix never showed: plain Backspace
 }
+
+@Test func doubleTapUndoKeepsTheFirstDeletion() {
+    var u = AutoFixUndo<Int>()
+    u.applied(field: 1, beforeFix: "I saw teh ", original: "teh", fix: "the", trailing: " ")
+    u.firstBackspace()                               // went through: the space is gone
+    u.update(field: 1, before: "I saw the ")         // a read from before it landed keeps it
+    u.update(field: 1, before: "I saw the")
+    #expect(u.isArmed)
+    let plan = u.backspace(field: 1, before: "I saw the")
+    #expect(plan == AutoFixUndo<Int>.Plan(deleteCount: 3, text: "teh", word: "teh"))
+
+    u.applied(field: 1, beforeFix: "a teh, ", original: "teh", fix: "the", trailing: ", ")
+    u.firstBackspace()
+    #expect(u.backspace(field: 1, before: "a the,") == AutoFixUndo<Int>.Plan(deleteCount: 4, text: "teh,", word: "teh"))
+
+    u.applied(field: 1, beforeFix: "a teh", original: "teh", fix: "the", trailing: "")
+    u.firstBackspace()                               // nothing trailing: it took the fix's last letter
+    #expect(u.backspace(field: 1, before: "a th") == AutoFixUndo<Int>.Plan(deleteCount: 2, text: "teh", word: "teh"))
+}
+
+@Test func doubleTapUndoEndsOnAThirdBackspaceOrTypingOn() {
+    var u = AutoFixUndo<Int>()
+    u.applied(field: 1, beforeFix: "I saw teh ", original: "teh", fix: "the", trailing: " ")
+    u.firstBackspace()
+    u.firstBackspace()                               // a late second one went through too
+    #expect(!u.isArmed)
+
+    u.applied(field: 1, beforeFix: "I saw teh ", original: "teh", fix: "the", trailing: " ")
+    u.firstBackspace()
+    u.update(field: 1, before: "I saw th")           // deleting on
+    #expect(!u.isArmed)
+
+    u.applied(field: 1, beforeFix: "I saw teh ", original: "teh", fix: "the", trailing: " ")
+    u.update(field: 1, before: "I saw the")          // a read without the first Backspace counted
+    #expect(!u.isArmed)
+}
+
+@Test func doubleTapUndoWaitsWhileTypedOnTextIsBackspacedAway() {
+    var u = AutoFixUndo<Int>()
+    u.applied(field: 1, beforeFix: "I saw teh ", original: "teh", fix: "the", trailing: " ")
+    u.suspend()                                      // typed "x" right after the fix
+    #expect(!u.isArmed && u.isAlive)
+    #expect(u.backspace(field: 1, before: "I saw the x") == nil)
+    u.applied(field: 1, beforeFix: "I saw teh ", original: "teh", fix: "the", trailing: " ")
+    u.suspend()
+    let stillWaiting = u.update(field: 1, before: "I saw the xy")  // the fix plus typed-on text
+    #expect(!stillWaiting && u.isAlive)
+    let rearmed = u.update(field: 1, before: "I saw the ")         // backspaced it away
+    #expect(rearmed)
+    #expect(u.isArmed)
+    u.firstBackspace()
+    #expect(u.backspace(field: 1, before: "I saw the") == AutoFixUndo<Int>.Plan(deleteCount: 3, text: "teh", word: "teh"))
+}
+
+@Test func pausedUndoEndsWhenTheFixChanges() {
+    var u = AutoFixUndo<Int>()
+    u.applied(field: 1, beforeFix: "I saw teh ", original: "teh", fix: "the", trailing: " ")
+    u.suspend()
+    u.update(field: 1, before: "I saw th")           // deleted into the fix
+    #expect(!u.isAlive)
+
+    u.applied(field: 1, beforeFix: "I saw teh ", original: "teh", fix: "the", trailing: " ")
+    u.suspend()
+    u.update(field: 1, before: "I saw the x\n")      // a line break: the text was sent
+    #expect(!u.isAlive)
+
+    u.applied(field: 1, beforeFix: "I saw teh ", original: "teh", fix: "the", trailing: " ")
+    u.suspend()
+    u.update(field: 2, before: "I saw the ")         // another field
+    #expect(!u.isAlive)
+}
+
+@Test func rereadOfOneWordAtTheCaretIsUndoable() {
+    #expect(SingleWordChange.split(old: "beleive ", new: "believe ")! == ("beleive", "believe", " "))
+    #expect(SingleWordChange.split(old: "teh, ", new: "the, ")! == ("teh", "the", ", "))
+    #expect(SingleWordChange.split(old: "teh", new: "the")! == ("teh", "the", ""))
+    #expect(SingleWordChange.split(old: "teh cat ", new: "the cat ") == nil)    // further back
+    #expect(SingleWordChange.split(old: "i has ", new: "I have ") == nil)       // two words
+}
+
+@Test func wholeRereadStretchIsUndoable() {
+    #expect(SingleWordChange.split(old: "i has went ", new: "I have gone ", wholeStretch: true)!
+            == ("i has went", "I have gone", " "))
+    #expect(SingleWordChange.split(old: "teh cat sat. ", new: "the cat sat. ", wholeStretch: true)!
+            == ("teh cat sat", "the cat sat", ". "))
+    #expect(SingleWordChange.split(old: "a\nteh ", new: "a\nthe ", wholeStretch: true) == nil)  // across a line
+
+    var u = AutoFixUndo<Int>()
+    u.applied(field: 1, beforeFix: "So i has went ", original: "i has went", fix: "I have gone", trailing: " ")
+    u.firstBackspace()
+    #expect(u.backspace(field: 1, before: "So I have gone")
+            == AutoFixUndo<Int>.Plan(deleteCount: 11, text: "i has went", word: "i has went"))
+}
+
+@Test func rereadUndoInStages() {
+    // "we has went to the the store " → "we have gone to the store "; nearest change: the doubled "the".
+    let s = SingleWordChange.staged(old: "has went to the the store ", partial: "have gone to the the store ",
+                                    new: "have gone to the store ")!
+    #expect(s == ("has went to the the store", "have gone to the the store", "have gone to the store", " "))
+    #expect(SingleWordChange.staged(old: "teh ", partial: "teh ", new: "the ") == nil)   // one stage only
+    #expect(SingleWordChange.staged(old: "a teh", partial: "a the", new: "A the") == nil) // nothing trails
+
+    var u = AutoFixUndo<Int>()
+    u.applied(field: 1, beforeFix: "So " + s.partial + s.trailing, original: s.partial, fix: s.new, trailing: s.trailing)
+    u.firstBackspace()
+    let first = u.backspace(field: 1, before: "So have gone to the store")
+    #expect(first == AutoFixUndo<Int>.Plan(deleteCount: 22, text: "have gone to the the store",
+                                            word: "have gone to the the store"))
+    u.appliedTapped(field: 1, beforeFix: "So " + s.old + s.trailing, original: s.old, fix: s.partial,
+                    trailing: s.trailing)
+    let second = u.backspace(field: 1, before: "So have gone to the the store")
+    #expect(second == AutoFixUndo<Int>.Plan(deleteCount: 26, text: "has went to the the store",
+                                             word: "has went to the the store"))
+}

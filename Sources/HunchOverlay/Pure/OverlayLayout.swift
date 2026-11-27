@@ -87,6 +87,33 @@ public enum OverlayLayout {
         max(0, visibleFrame.maxX - x)
     }
 
+    /// Width left for ghost text starting at `x`: up to the screen's right edge, and up to the
+    /// field's right edge when the caret sits inside the field (the host wraps there, so text drawn
+    /// past it spills over the field's border and buttons). A field the caret is outside of (a
+    /// misreported or scrolled frame) is ignored rather than hiding the suggestion.
+    public static func availableWidth(fromX x: CGFloat, visibleFrame: CGRect, fieldFrame: CGRect?,
+                                      caretRect: CGRect) -> CGFloat {
+        let screen = availableWidth(fromX: x, visibleFrame: visibleFrame)
+        guard let field = fieldFrame, field.width > 0, field.height > 0,
+              caretRect.maxX >= field.minX, caretRect.maxX < field.maxX else { return screen }
+        return min(screen, max(0, field.maxX - x))
+    }
+
+    /// The part of `text` that fits `maxWidth`, ending at a word break when one fits: the words
+    /// that don't fit are the ones the host would wrap onto the next line, where they show once the
+    /// typing gets there. Text with no break in the part that fits (one long word, Chinese or
+    /// Japanese) is cut by character instead, so something always shows.
+    public static func fitWholeWords(_ text: String, maxWidth: CGFloat, measure: (String) -> CGFloat) -> String {
+        let prefix = truncate(text, maxWidth: maxWidth, measure: measure)
+        guard prefix.count < text.count else { return text }
+        let chars = Array(text)
+        // The word that doesn't fit starts after the last space at or before the cut.
+        var cut = prefix.count
+        while cut > 0, !chars[cut].isWhitespace { cut -= 1 }
+        let words = String(chars[0..<cut]).replacingOccurrences(of: "\\s+$", with: "", options: .regularExpression)
+        return words.contains(where: { !$0.isWhitespace }) ? words : prefix
+    }
+
     /// Card frame below the caret with `gap`; flips above when it would leave the bottom of `visible`.
     /// X follows the caret and is clamped into `visible`.
     public static func cardFrame(caretRect: CGRect, size: CGSize, visible: CGRect, gap: CGFloat = cardGap) -> CGRect {

@@ -42,20 +42,24 @@ public struct BiasBuilder: Sendable {
         actives.sort { $0.1 > $1.1 }
         var items: [Item] = []
         var ctx: [String: [Hit]] = [:]
+        // Hits a 2-word key lends to lookups by its last word alone. Kept apart and appended after
+        // the exact 1-word hits, so an entry's own 1-word context wins (`hitMap` takes the first hit).
+        var derived: [String: [Hit]] = [:]
         var letters: [Character: [Int]] = [:]
         for (i, (e, w)) in actives.enumerated() {
             items.append(Item(text: e.text, lower: VocabularyModel.key(e.text), weight: w, apps: e.apps))
             if let c = items[i].lower.first { letters[c, default: []].append(i) }
-            for key in Set(e.contexts.keys).union(e.negContexts.keys) {
+            // Sorted, so which derived hit comes first doesn't change from run to run.
+            for key in Set(e.contexts.keys).union(e.negContexts.keys).sorted() {
                 let hit = Hit(index: i, weight: e.weight(inContext: key, at: now),
                               positive: (e.contexts[key] ?? 0) > 0)
                 ctx[key, default: []].append(hit)
-                // A 2-word key also serves lookups by its last word alone.
                 if let last = key.split(separator: " ").last, last.count != key.count {
-                    ctx[String(last), default: []].append(hit)
+                    derived[String(last), default: []].append(hit)
                 }
             }
         }
+        for (key, hits) in derived { ctx[key, default: []].append(contentsOf: hits) }
         self.avoid = Array(model.blockedTexts.prefix(Self.maxAvoid))
         self.items = items
         self.byContext = ctx

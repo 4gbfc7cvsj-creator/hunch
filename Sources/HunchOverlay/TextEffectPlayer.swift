@@ -74,17 +74,18 @@ public final class TextEffectPlayer {
         return (EffectWrap.settleTime(r, counts: counts, delays: delays), EffectWrap.linger(r))
     }
 
-    /// Plays one piece of text drawn at `presentation` (inline), then takes it down once settled
-    /// (and its particles are done) and calls `done`. Returns the seconds that takes, or nil (and
-    /// plays nothing) for None.
+    /// Plays one piece of text drawn at `presentation` (inline), starting `delay` seconds from now,
+    /// then takes it down once settled (and its particles are done) and calls `done`. Returns the
+    /// seconds from its start that takes, or nil (and plays nothing) for None.
     @discardableResult
-    public func playPiece(_ presentation: GhostPresentation, color: NSColor?, done: @escaping () -> Void) -> TimeInterval? {
+    public func playPiece(_ presentation: GhostPresentation, color: NSColor?, after delay: TimeInterval = 0,
+                          done: @escaping () -> Void) -> TimeInterval? {
         let r = recipe(tweaks: presentation.tweaks)
         guard !r.isEmpty, !presentation.text.isEmpty else { return nil }
         let seconds = PopIn.totalDuration(r, characters: presentation.text.count) + EffectWrap.linger(r)
         var p = presentation
         p.mode = .inline
-        show(p, color: color, after: 0, hideAfter: seconds, done: done)
+        show(p, color: color, after: delay, hideAfter: seconds, done: done)
         return seconds
     }
 

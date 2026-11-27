@@ -486,8 +486,10 @@ public final class GhostOverlayPresenter: GhostPresenting {
             x = caret.minX
             baseline = caret.minY - OverlayLayout.cardGap + font.descender
         }
-        let avail = OverlayLayout.availableWidth(fromX: x, visibleFrame: visible)
-        let shown = OverlayLayout.truncate(text, maxWidth: avail) { GhostView.width($0, font, kern: kern) }
+        // Stops at the field's right edge (whole words), the rest shows once the line wraps.
+        let avail = OverlayLayout.availableWidth(fromX: x, visibleFrame: visible,
+                                                 fieldFrame: presentation.geometry.fieldFrame, caretRect: caret)
+        let shown = OverlayLayout.fitWholeWords(text, maxWidth: avail) { GhostView.width($0, font, kern: kern) }
         guard !shown.isEmpty else { hide(); return }
         let y = OverlayLayout.panelOriginY(baseline: baseline, fontDescent: -font.descender) - GhostView.padding
         if DrawDebugLog.isEnabled {

@@ -60,8 +60,8 @@ public final class KeyboardMonitor: KeyboardMonitoring, @unchecked Sendable {
     private var repliesShown = false
     private var replyHighlighted = false
     private var replyArrows: ReplyArrows = []
-    /// "Fix automatically": the next key press, if a plain Backspace, undoes the fix.
-    private var undoBackspaceArmed = false
+    /// "Fix automatically": which Backspace undoes the fix (the next one, or a quick second one).
+    private var undoGate = BackspaceUndoGate()
     /// The user's recent key presses with their timing, for autocorrect's keyboard prior
     /// (`KeyTimingLog`): memory only, a few dozen keys, cleared on clicks and Secure Input.
     private var keyTiming = KeyTimingLog()
@@ -226,10 +226,11 @@ public final class KeyboardMonitor: KeyboardMonitoring, @unchecked Sendable {
     }
 
     /// "Fix automatically": consume the next key press if it is a plain Backspace (emitting
-    /// `InputCommand.undoAutoFix`); any other key ends this. False ends it too.
-    public func armBackspaceUndo(_ on: Bool) {
+    /// `InputCommand.undoAutoFix`); any other key ends this. False ends it too. A double-tap window
+    /// (ms, > 0) lets the first Backspace through and consumes only a second one within the window.
+    public func armBackspaceUndo(_ on: Bool, doubleTapMilliseconds: Int = 0, followUps: Int = 0) {
         lock.withLock {
-            undoBackspaceArmed = on
+            undoGate.arm(on, doubleTapMilliseconds: doubleTapMilliseconds, followUps: followUps)
             applyTapStateLocked()
         }
     }
@@ -307,7 +308,7 @@ public final class KeyboardMonitor: KeyboardMonitoring, @unchecked Sendable {
         shortcutKeyCodes = Set(chords.map(\.keyCode))
         let shouldRun = TapRules.tapShouldRun(ghostVisible: ghostVisible, editableFocus: editableFocus,
                                               bindings: boundChords(chords))
-            || holdQueue.isActive || undoBackspaceArmed || repliesShown
+            || holdQueue.isActive || undoGate.armed || repliesShown
         if shouldRun != acceptTapRunning || CGEvent.tapIsEnabled(tap: tap) != shouldRun {
             acceptTapRunning = shouldRun
             CGEvent.tapEnable(tap: tap, enable: shouldRun)
@@ -359,8 +360,8 @@ public final class KeyboardMonitor: KeyboardMonitoring, @unchecked Sendable {
             noteSecureInput(IsSecureEventInputEnabled())
             let chord = Self.chord(of: event)
             let replay = EventMarker.replayOrder(event) != nil
-            let (arbiter, running, ghost, focus, holding, undoArmed, catchUp, revert) = lock.withLock {
-                (self.arbiter, acceptTapRunning, ghostVisible, editableFocus, holdQueue.isActive, undoBackspaceArmed,
+            let (arbiter, running, ghost, focus, holding, undoGate, catchUp, revert) = lock.withLock {
+                (self.arbiter, acceptTapRunning, ghostVisible, editableFocus, holdQueue.isActive, self.undoGate,
                  catchUpWaiting, revertWaiting)
             }
             // A held press is reported when it is replayed.
@@ -369,8 +370,8 @@ public final class KeyboardMonitor: KeyboardMonitoring, @unchecked Sendable {
             let (repliesOn, highlighted, arrows) = lock.withLock { (repliesShown, replyHighlighted, replyArrows) }
             if running, ReplyKeyRules.decide(chord, shown: repliesOn, highlighted: highlighted, arrows: arrows) != nil,
                !IsSecureEventInputEnabled() { return }
-            // Backspace straight after an automatic fix is the consuming tap's (it emits the undo).
-            if undoArmed, Self.isPlainBackspace(chord) { return }
+            // Backspace that undoes an automatic fix is the consuming tap's (it emits the undo).
+            if Self.undoDecision(undoGate, event, chord) == .undo { return }
             // So is a Return while words wait to be settled (it is reported when replayed).
             if running {
                 // The consuming tap owns keys it will swallow; don't report them as typing
@@ -414,6 +415,22 @@ public final class KeyboardMonitor: KeyboardMonitoring, @unchecked Sendable {
         guard !EventMarker.isOurs(event) else { return pass }
         let now = Self.uptimeNanoseconds()
         let replayOrder = EventMarker.replayOrder(event)
+        // A quick further undo press while an undo is still typing (keys are held): judge it now, by
+        // when it was pressed, rather than when it would be replayed. The coordinator queues it.
+        let undoWhileHeld: Bool = lock.withLock {
+            guard holdQueue.isActive, replayOrder == nil, undoGate.armed, !IsSecureEventInputEnabled() else {
+                return false
+            }
+            let decision = Self.undoDecision(undoGate, event, Self.chord(of: event))
+            guard decision == .undo else { return false }
+            undoGate.apply(decision, now: event.timestamp)
+            if !undoGate.armed { applyTapStateLocked() }
+            return true
+        }
+        if undoWhileHeld {
+            emit(.undoAutoFix)
+            return nil
+        }
         // Holding: keep the press (a copy; the tap consumes the original) to post again later.
         let (overdue, held): ([(order: Int, event: CGEvent)], Bool) = lock.withLock {
             let overdue = holdQueue.tick(now: now)
@@ -436,15 +453,17 @@ public final class KeyboardMonitor: KeyboardMonitoring, @unchecked Sendable {
 
     private func handleAcceptKey(_ event: CGEvent, pass: Unmanaged<CGEvent>) -> Unmanaged<CGEvent>? {
         let keyCode = UInt16(truncatingIfNeeded: event.getIntegerValueField(.keyboardEventKeycode))
-        let (arbiter, on, ghost, focus, shortcutKeys, undoArmed, catchUp, revert) = lock.withLock {
-            defer {
-                // Any key ends the Backspace undo; only a plain Backspace uses it.
-                if undoBackspaceArmed { undoBackspaceArmed = false; applyTapStateLocked() }
+        let (arbiter, on, ghost, focus, shortcutKeys, undo, catchUp, revert) = lock.withLock {
+            let undo = Self.undoDecision(undoGate, event, Self.chord(of: event))
+            if undoGate.armed {
+                // Any key but the first of a double-tap ends the Backspace undo.
+                undoGate.apply(undo, now: event.timestamp)
+                if !undoGate.armed { applyTapStateLocked() }
             }
-            return (self.arbiter, acceptTapRunning, ghostVisible, editableFocus, shortcutKeyCodes, undoBackspaceArmed,
+            return (self.arbiter, acceptTapRunning, ghostVisible, editableFocus, shortcutKeyCodes, undo,
                     catchUpWaiting, revertWaiting)
         }
-        if undoArmed, Self.isPlainBackspace(Self.chord(of: event)), !IsSecureEventInputEnabled() {
+        if undo == .undo, !IsSecureEventInputEnabled() {
             emit(.undoAutoFix)
             return nil
         }
@@ -651,8 +670,12 @@ public final class KeyboardMonitor: KeyboardMonitoring, @unchecked Sendable {
         }
     }
 
-    private static func isPlainBackspace(_ chord: KeyChord) -> Bool {
-        chord.keyCode == UInt16(kVK_Delete) && chord.modifiers == 0
+    /// Both taps judge with the event's own timestamp, so they agree on the same press.
+    private static func undoDecision(_ gate: BackspaceUndoGate, _ event: CGEvent,
+                                     _ chord: KeyChord) -> BackspaceUndoGate.Decision {
+        gate.decide(plainBackspace: ChordMatcher.isPlainBackspace(chord),
+                    autorepeat: event.getIntegerValueField(.keyboardEventAutorepeat) != 0,
+                    now: event.timestamp)
     }
 
     private static func uptimeNanoseconds() -> UInt64 { DispatchTime.now().uptimeNanoseconds }

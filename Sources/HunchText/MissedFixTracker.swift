@@ -311,8 +311,55 @@ public struct CatchUpPlan: Sendable, Equatable {
     }
 }
 
+/// A Strong reread's stretch (from its first change to the caret) split for the Backspace undo:
+/// what was typed, what the reread made of it, and the unchanged spaces and punctuation after both
+/// ("i has went " → "i has went" / "I have gone" / " "). `wholeStretch` false: only a single word
+/// ("beleive " → "believe "); nil for anything else.
+public enum SingleWordChange {
+    public static func split(old: String, new: String,
+                             wholeStretch: Bool = false) -> (original: String, fix: String, trailing: String)? {
+        var o = Array(old), n = Array(new)
+        var trailing: [Character] = []
+        while let a = o.last, let b = n.last, a == b, !(a.isLetter || a.isNumber) {
+            trailing.insert(a, at: 0)
+            o.removeLast()
+            n.removeLast()
+        }
+        guard !o.isEmpty, !n.isEmpty, o != n, !trailing.contains(where: \.isNewline),
+              !o.contains(where: \.isNewline), !n.contains(where: \.isNewline) else { return nil }
+        if !wholeStretch, o.contains(where: \.isWhitespace) || n.contains(where: \.isWhitespace) { return nil }
+        return (String(o), String(n), String(trailing))
+    }
+}
+
+extension SingleWordChange {
+    /// A reread undone in two stages: `old` as typed, `partial` with only the change nearest the
+    /// caret taken back, `new` as the reread left it; the cores and the trailing spaces and
+    /// punctuation all three share. Nil when the stages can't be told apart or nothing trails (the
+    /// first Backspace would then eat into a word).
+    public static func staged(old: String, partial: String,
+                              new: String) -> (old: String, partial: String, new: String, trailing: String)? {
+        var o = Array(old), p = Array(partial), n = Array(new)
+        var trailing: [Character] = []
+        while let a = o.last, let b = p.last, let c = n.last, a == b, b == c, !(a.isLetter || a.isNumber) {
+            trailing.insert(a, at: 0)
+            o.removeLast()
+            p.removeLast()
+            n.removeLast()
+        }
+        guard !trailing.isEmpty, !o.isEmpty, !p.isEmpty, !n.isEmpty, o != p, p != n,
+              !(o + p + n + trailing).contains(where: \.isNewline) else { return nil }
+        return (String(o), String(p), String(n), String(trailing))
+    }
+}
+
 /// "Fix automatically": Backspace straight after an automatic fix restores the original word.
 /// Pure state; the keyboard monitor consumes that Backspace, the coordinator asks `backspace`.
+/// Double-tap mode: the first Backspace reaches the app (`firstBackspace`) and deletes one
+/// character; a quick second one restores the word and keeps that deletion ("the " → "teh").
+/// There, typing on after the fix only pauses the undo (`suspend`): while the field still shows the
+/// fix with text added after it, the undo waits, and once Backspace has taken that text away again
+/// a read re-arms it. Changing the fix, a line break, another field or focus leaving end it.
 public struct AutoFixUndo<Field: Hashable & Sendable>: Sendable {
     public struct Plan: Sendable, Equatable {
         /// Characters to delete before the caret: the fix and its trailing text.
@@ -330,13 +377,22 @@ public struct AutoFixUndo<Field: Hashable & Sendable>: Sendable {
         var original: String
         var fix: String
         var trailing: String
+        /// Double-tap: the first Backspace went through and deleted the last character.
+        var tapped = false
+        var afterFirstTap: String { String(afterFix.dropLast()) }
+        /// Double-tap: typed on after the fix; waiting for the text to come back to `afterFix`.
+        var suspended = false
     }
 
     private var armed: Armed?
 
     public init() {}
 
-    public var isArmed: Bool { armed != nil }
+    /// Backspace may undo now.
+    public var isArmed: Bool { armed.map { !$0.suspended } ?? false }
+    /// Armed, or paused until the typed-on text is gone again.
+    public var isAlive: Bool { armed != nil }
+    public var isSuspended: Bool { armed?.suspended ?? false }
 
     /// An automatic fix replaced `original + trailing` (ending `beforeFix`) with `fix + trailing`.
     public mutating func applied(field: Field, beforeFix: String, original: String, fix: String, trailing: String) {
@@ -345,11 +401,59 @@ public struct AutoFixUndo<Field: Hashable & Sendable>: Sendable {
                       original: original, fix: fix, trailing: trailing)
     }
 
+    /// The next stage of a staged undo, armed as if its first Backspace already went through: the
+    /// field shows `fix + trailing` minus its last character, and one more Backspace gives back
+    /// `original + trailing` minus it.
+    public mutating func appliedTapped(field: Field, beforeFix: String, original: String, fix: String,
+                                       trailing: String) {
+        applied(field: field, beforeFix: beforeFix, original: original, fix: fix, trailing: trailing)
+        armed?.tapped = true
+    }
+
     /// A read of the field. Still the text from just before or just after the fix keeps the undo;
-    /// anything else (typing on, another field) ends it.
-    public mutating func update(field: Field, before: String) {
-        guard let a = armed else { return }
-        if a.field != field || (before != a.afterFix && before != a.beforeFix) { armed = nil }
+    /// anything else (typing on, another field) ends it. Paused: the fix with text after it (no line
+    /// break) keeps waiting, the fix alone again re-arms it (returns true: tell the keyboard monitor).
+    @discardableResult
+    public mutating func update(field: Field, before: String) -> Bool {
+        guard var a = armed else { return false }
+        guard a.field == field else {
+            armed = nil
+            return false
+        }
+        if a.suspended {
+            if before == a.afterFix {
+                a.suspended = false
+                a.tapped = false
+                armed = a
+                return true
+            }
+            let typedOn = before.hasPrefix(a.afterFix) ? before.dropFirst(a.afterFix.count) : nil
+            if typedOn == nil || typedOn!.contains(where: \.isNewline) { armed = nil }
+            return false
+        }
+        let shown = before == a.afterFix || before == a.beforeFix || (a.tapped && before == a.afterFirstTap)
+        if !shown { armed = nil }
+        return false
+    }
+
+    /// Double-tap mode: a key other than the undo Backspace reached the app. The undo pauses
+    /// until the field shows the fix alone again (see `update`).
+    public mutating func suspend() {
+        guard var a = armed else { return }
+        a.suspended = true
+        a.tapped = false
+        armed = a
+    }
+
+    /// Double-tap mode: a plain Backspace went through to the app (it deleted one character). The
+    /// undo stays for a second one; a further Backspace after that ends it.
+    public mutating func firstBackspace() {
+        guard var a = armed, !a.tapped, !a.afterFix.isEmpty else {
+            armed = nil
+            return
+        }
+        a.tapped = true
+        armed = a
     }
 
     /// Any key other than that first Backspace makes Backspace behave normally again.
@@ -359,7 +463,16 @@ public struct AutoFixUndo<Field: Hashable & Sendable>: Sendable {
     /// Ends the undo either way.
     public mutating func backspace(field: Field, before: String) -> Plan? {
         defer { armed = nil }
-        guard let a = armed, a.field == field, before == a.afterFix else { return nil }
+        guard let a = armed, !a.suspended, a.field == field else { return nil }
+        if a.tapped {
+            // The first Backspace's deletion stays: it took the last trailing character (or, with
+            // nothing trailing, the fix's last letter, and then the whole word comes back).
+            guard before == a.afterFirstTap else { return nil }
+            if a.trailing.isEmpty { return Plan(deleteCount: a.fix.count - 1, text: a.original, word: a.original) }
+            return Plan(deleteCount: a.fix.count + a.trailing.count - 1, text: a.original + a.trailing.dropLast(),
+                        word: a.original)
+        }
+        guard before == a.afterFix else { return nil }
         return Plan(deleteCount: a.fix.count + a.trailing.count, text: a.original + a.trailing, word: a.original)
     }
 

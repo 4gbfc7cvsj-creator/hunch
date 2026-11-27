@@ -41,23 +41,23 @@ struct SuggestionStylesSection: View {
                 .onDrop(of: [.text], isTargeted: nil) { _ in dragging = nil; return true }
                 addButton
             }
+            .confirmationDialog("Delete \u{201C}\(confirmDelete?.name ?? "")\u{201D}?",
+                                isPresented: Binding(get: { confirmDelete != nil }, set: { if !$0 { confirmDelete = nil } }),
+                                presenting: confirmDelete) { style in
+                Button("Delete", role: .destructive) {
+                    update { $0.removeAll { $0.id == style.id } }
+                    if selected == style.id { selected = nil }
+                }
+            }
             if let id = selected, let style = styles.first(where: { $0.id == id }) {
                 editor(style)
-            } else {
-                Text("Click a style to edit it; drag to change the order. \(chordDescription(model.settings.bindings.stylePrevious)) goes left, \(chordDescription(model.settings.bindings.styleNext)) goes right.")
-                    .font(.caption).foregroundStyle(.secondary)
             }
         } header: {
-            SettingLabel("Suggestion styles", info: "With a suggestion showing, \(chordDescription(model.settings.bindings.styleNext)) redoes it in the style to the right and \(chordDescription(model.settings.bindings.stylePrevious)) in the one to the left; past either end you\u{2019}re back to the app\u{2019}s own instructions. A tag under the caret names the style, with the ones before and after it on either side. A style replaces the app\u{2019}s instructions and How I write, and lasts for the rest of the text box. Change the keys in Shortcuts.")
-        }
-        .searchAnchor("personalization.styles")
-        .confirmationDialog("Delete \u{201C}\(confirmDelete?.name ?? "")\u{201D}?",
-                            isPresented: Binding(get: { confirmDelete != nil }, set: { if !$0 { confirmDelete = nil } }),
-                            presenting: confirmDelete) { style in
-            Button("Delete", role: .destructive) {
-                update { $0.removeAll { $0.id == style.id } }
-                if selected == style.id { selected = nil }
-            }
+            SettingLabel("Suggestion styles", info: "With a suggestion showing, \(chordDescription(model.settings.bindings.styleNext)) redoes it in the style to the right and \(chordDescription(model.settings.bindings.stylePrevious)) in the one to the left; past either end you\u{2019}re back to the app\u{2019}s own instructions. A tag under the caret names the style, with the ones before and after it on either side. A style replaces the app\u{2019}s instructions and How I write, and lasts for the rest of the text box.")
+            .searchAnchor("personalization.styles")
+        } footer: {
+            FooterText("Tips: Click a style to edit it; drag to change the order. Set the keys in "
+                       + SettingsLinks.md("Shortcuts", "shortcuts.styleNext") + ".")
         }
     }
 

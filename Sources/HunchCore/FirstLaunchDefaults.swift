@@ -17,8 +17,6 @@ extension HunchSettings {
         s.suggestionPauseMs = 50
         s.runtime.contextTokens = 2048
         s.bindings.full = nil
-        s.bindings.forceActivate = nil
-        s.bindings.catchUp = .optionTab
         s.bindings.writeForMe = KeyChord(keyCode: 48, modifiers: 0x20000)  // ⇧Tab
         // Style chip: ⌃⌥⇧→ / ⌃⌥⇧←
         s.bindings.styleNext = KeyChord(keyCode: 124, modifiers: 0x40000 | 0x80000 | 0x20000)

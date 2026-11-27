@@ -34,8 +34,7 @@ struct PrivacyDataPane: View {
                 LabeledContent {
                     Button("Diagnostic console\u{2026}") { DiagnosticConsoleController.shared.show() }
                 } label: {
-                    Text("Diagnostic console")
-                    Text("Shows what went into each model request and what came out, live, while its window is open. Kept in memory only and thrown away when you close it; nothing is saved.")
+                    SettingLabel("Diagnostic console", info: "Shows what went into each model request and what came out, live, while its window is open. Kept in memory only and thrown away when you close it; nothing is saved.")
                 }
                 .searchAnchor("privacy.console")
                 DictationDiagnosticsRows(model: model)
@@ -97,7 +96,7 @@ struct PrivacySection: View {
     private func block(_ title: String, _ paragraphs: [String]) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title).font(.headline)
-            ForEach(paragraphs, id: \.self) { Text($0).foregroundStyle(.secondary) }
+            ForEach(paragraphs, id: \.self) { Text(SettingsLinks.text($0)).foregroundStyle(.secondary) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 2)

@@ -367,3 +367,27 @@ private let replyChain: [OCRLine] = {
         """)
     #expect(out?.previewsDropped == 6)
 }
+
+@Test func keepsAReplyThatOnlySharesAShortPhraseWithAMention() {
+    // "see you there" (13 characters) is inside the real reply, but the reply doesn't start with it.
+    let out = ScreenTextPipeline.process(lines: chat([
+        "Sam 10:20 AM",
+        "@Sam see you there",
+        "ok see you there!",
+    ]), caret: chatCaret, maxCharacters: 1000)
+    #expect(out?.text.contains("@Sam see you there") == true)
+    #expect(out?.text.contains("ok see you there!") == true)
+    #expect(out?.previewsDropped == 0)
+}
+
+@Test func dropsAShortPreviewWhoseOriginalStartsWithIt() {
+    let out = ScreenTextPipeline.process(lines: chat([
+        "Nora 10:14 AM",
+        "see you there at six",
+        "Sam 10:20 AM",
+        "@Nora see you there…",
+        "sounds good",
+    ]), caret: chatCaret, maxCharacters: 1000)
+    #expect(out?.previewsDropped == 1)
+    #expect(out?.text.contains("@Nora") == false)
+}

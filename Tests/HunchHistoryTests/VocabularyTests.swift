@@ -296,3 +296,21 @@ private func makeService(_ url: URL, _ keys: InMemoryKeyProvider) -> HistoryServ
     #expect(!FileManager.default.fileExists(atPath: url.path))
     #expect(throws: KeyProviderError.notFound) { try keys.loadKey() }
 }
+
+@Test func exactOneWordContextBeatsATwoWordKeysLastWord() {
+    // "tell" is a positive 1-word context; "never tell" (negative) also files a hit under "tell".
+    // The exact hit must win every run, whatever order the keys come out of the set in.
+    func emmaWeight(withNegative: Bool) -> Float? {
+        var m = VocabularyModel()
+        var e = VocabEntry(text: "Emma", now: t0)
+        e.positive = 5; e.posMass = 2; e.days = [1, 2]; e.active = true
+        e.contexts = ["tell": 3]
+        if withNegative { e.negContexts = ["never tell": 5, "we never tell": 5, "a tell": 5] }
+        m.entries["emma"] = e
+        return BiasBuilder(model: m, now: t0).bias(for: "I tell ", strength: 1)
+            .entries.first { $0.text.trimmingCharacters(in: .whitespaces) == "Emma" }?.weight
+    }
+    let plain = emmaWeight(withNegative: false)
+    #expect(plain != nil)
+    for _ in 0..<10 { #expect(emmaWeight(withNegative: true) == plain) }
+}

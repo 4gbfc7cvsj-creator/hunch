@@ -245,8 +245,7 @@ public final class JSONSettingsStore: SettingsStoring {
 
     private func write(_ settings: HunchSettings) throws {
         let data = try Self.encode(settings)
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try data.write(to: url, options: .atomic)
+        try PrivateFile.write(data, to: url)
     }
 
     static func read(_ url: URL) -> DiskContents {

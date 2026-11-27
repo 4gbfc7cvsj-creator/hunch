@@ -32,7 +32,7 @@ struct DictationGeneralRows: View {
 
     var body: some View {
         Toggle(isOn: model.bind(\.dictation.enabled)) {
-            SettingLabel("Dictation", info: "Press the dictation shortcut (Shortcuts) and speak; the text goes in where you\u{2019}re typing. "
+            SettingLabel("Dictation", info: "Press the dictation shortcut (\(SettingsLinks.md("Shortcuts", "shortcuts.dictation"))) and speak; the text goes in where you\u{2019}re typing. "
                  + "Tap to start and again to stop, or hold while you speak. Esc cancels.")
         }
         .searchAnchor("general.dictation")
@@ -51,7 +51,7 @@ struct DictationGeneralRows: View {
             .disabled(!model.settings.dictation.cleanupEnabled)
             Toggle(isOn: model.bind(\.dictation.boostAfterDictation)) {
                 SettingLabel("Offer Polish", info: "For a few seconds after the text goes in, the pill shows a blue ghost with sparkles. Click it, or press "
-                     + "the Write for me shortcut, to polish the paragraphs you dictated into.")
+                     + "the \(SettingsLinks.md("Write for me shortcut", "shortcuts.writeForMe")), to polish the paragraphs you dictated into.")
             }
             .searchAnchor("general.offerPolish")
         }
@@ -83,6 +83,7 @@ struct DictationShortcutRow: View {
         LabeledContent("Dictation") {
             KeyRecorder(chord: model.bind(\.dictation.shortcut)).frame(width: 150, height: 24)
         }
+        ShortcutConflictWarning(settings: model.settings, keyPath: \.dictation.shortcut)
         if state.shortcutRefused {
             Label("macOS or another app already uses the dictation shortcut. Pick another one.",
                   systemImage: "exclamationmark.triangle.fill")
@@ -101,6 +102,7 @@ struct VoiceInstructionShortcutRow: View {
             LabeledContent("Voice instruction (experimental)") {
                 KeyRecorder(chord: model.bind(\.voiceInstruction.shortcut)).frame(width: 150, height: 24)
             }
+            ShortcutConflictWarning(settings: model.settings, keyPath: \.voiceInstruction.shortcut)
             if let problem = state.voiceShortcutProblem {
                 Label(problem, systemImage: "exclamationmark.triangle.fill")
                     .font(.caption).foregroundStyle(.orange)
@@ -117,27 +119,29 @@ struct DictationContextSection: View {
     var body: some View {
         Section {
             Toggle(isOn: model.bind(\.dictation.learnFromFixes)) {
-                SettingLabel("Learn from fixes", info: "When you correct a word Hunch dictated, it fixes that mishearing in later dictations, and with Learn from my writing on, adds the word to your learned words. Never in code editors or apps where learning is off.")
+                SettingLabel("Learn from fixes", info: "When you correct a word Hunch dictated, it fixes that mishearing in later dictations, and with \(SettingsLinks.md("Learn words and phrases", "personalization.learnWords")) on, adds the word to your learned words. Never in code editors or apps where learning is off.")
             }
             .searchAnchor("personalization.learnFromFixes")
             toggle("Learned words", "Your learned and added words, as spellings for Whisper and the cleanup.",
                    \.dictation.context.learnedWords)
             toggle("Window title names", "Names and terms from the email subject or document name.",
                    \.dictation.context.titleNames)
-            toggle("Names on screen", "Names and terms from the text on screen. Needs Screen Awareness on.",
+            toggle("Names on screen", "Names and terms from the text on screen. Needs \(SettingsLinks.md("Screen Awareness", "personalization.screenAwareness")) on.",
                    \.dictation.context.screenNames)
             toggle("Text before cursor", "So the cleanup fits the sentence it continues.",
                    \.dictation.context.textBefore)
             toggle("App & field type", "Chat, email, code\u{2026}, and the app's name.", \.dictation.context.appType)
             toggle("Languages", "Your languages, and Traditional characters when that's what you type.",
                    \.dictation.context.languages)
-            toggle("About me", "A trimmed About me (only with \u{201C}Personal info\u{201D} on).",
+            toggle("About me", "A trimmed About me (only with \u{201C}\(SettingsLinks.md("Personal info", "personalization.personalInfo"))\u{201D} on).",
                    \.dictation.context.aboutMe)
         } header: {
             SettingLabel("Dictation Cleanup Context",
-                         info: "For testing: turn sources on or off to compare quality and speed (see Privacy & Data "
-                             + "\u{2192} Diagnostics for timings and the log).")
+                         info: "For testing: turn sources on or off to compare quality and speed.")
                 .searchAnchor("personalization.dictationContext")
+        } footer: {
+            FooterText("Tips: Timings and the log are in "
+                       + SettingsLinks.md("Privacy & Data \u{2192} Diagnostics", "privacy.debugLogging") + ".")
         }
     }
 

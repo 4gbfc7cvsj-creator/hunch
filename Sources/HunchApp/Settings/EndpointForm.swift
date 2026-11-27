@@ -146,7 +146,13 @@ final class EndpointFormModel {
     }
 
     func removeEndpoint() {
+        // Delete this category's own key too, unless another category's endpoint still uses it
+        // (a migrated Writing endpoint can share Autocomplete's).
+        let others: [WritableKeyPath<HunchSettings, EndpointConfig?>] = [\.endpoint, \.writeEndpoint, \.speechEndpoint]
+        let shared = others.contains { $0 != configKey && settings.settings[keyPath: $0]?.keychainAccount == ownAccount }
+        if keyAccount == ownAccount, !shared { _ = keys.deleteAPIKey(forAccount: ownAccount) }
         settings.set(configKey, to: nil)
+        hasStoredKey = keys.hasKey(forAccount: ownAccount)
         if isSelected { settings.set(engineKey, to: .local) }
         saveMessage = "Endpoint removed."
     }

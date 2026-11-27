@@ -1,4 +1,5 @@
 import Foundation
+import HunchCore
 
 /// When to try the on-screen match again for one line style: a burst of up to `burst` tries at
 /// least `spacing` apart, then, if none succeeded, a fresh burst after `cooldown`. A failed streak
@@ -118,7 +119,6 @@ public final class CalibrationStore {
         guard let fileURL else { return }
         let list = entries.values.sorted { $0.savedAt < $1.savedAt }
         guard let data = try? JSONEncoder().encode(list) else { return }
-        try? FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try? data.write(to: fileURL, options: .atomic)
+        try? PrivateFile.write(data, to: fileURL)
     }
 }

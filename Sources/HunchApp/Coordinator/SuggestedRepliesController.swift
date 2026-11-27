@@ -50,6 +50,7 @@ final class SuggestedRepliesController {
     /// The screen check after a click outside the bubble (`noteMouseDown`).
     private var clickCheck: Task<Void, Never>?
     /// The last "not offered" reason logged, per field, so perf.log gets it once.
+    private var loggedWait: (field: FieldID, why: String)?
     private var loggedWhyNot: (field: FieldID, why: String)?
 
     /// A fresher excerpt is fetched when the cached one is older than this.
@@ -108,7 +109,17 @@ final class SuggestedRepliesController {
             return
         }
         target = (context, geometry, policy)
-        guard doneField != context.field, picker == nil, job == nil, timer == nil, watch == nil else { return }
+        // Same box, new frame: the app finished laying out after the bubble showed.
+        if picker != nil { bubble.reposition(to: geometry) }
+        guard doneField != context.field, picker == nil, job == nil, timer == nil, watch == nil else {
+            let why = "done=\(doneField == context.field) showing=\(picker != nil) asking=\(job != nil) "
+                + "timer=\(timer != nil) watching=\(watch != nil)"
+            if loggedWait?.field != context.field || loggedWait?.why != why {
+                loggedWait = (context.field, why)
+                Self.log("replies: no new ask on this read (\(why))")
+            }
+            return
+        }
         scheduleAsk(trigger: "first ask")
     }
 

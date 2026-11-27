@@ -10,7 +10,7 @@ private func verdict(_ chord: KeyChord, next: Bool, previous: Bool, ghost: Bool 
     var snapshot = ArbiterSnapshot(field: field, hasGhost: ghost, publishedAt: 1_000, tabAllowed: true)
     snapshot.styleNextAvailable = next
     snapshot.stylePreviousAvailable = previous
-    let a = DefaultAcceptanceArbiter(bindings: AcceptBindings(), maxAgeNanoseconds: 1_500, timebase: identity)
+    let a = DefaultAcceptanceArbiter(bindings: legacyBindings, maxAgeNanoseconds: 1_500, timebase: identity)
     a.publish(snapshot)
     return a.inputVerdict(for: chord, now: 1_100)
 }
@@ -19,8 +19,8 @@ private func verdict(_ chord: KeyChord, next: Bool, previous: Bool, ghost: Bool 
     let b = AcceptBindings()
     #expect(b.styleNext == .optionShiftRight)
     #expect(b.stylePrevious == .optionShiftLeft)
-    // Plain Option+arrows stay with alternatives.
-    #expect(b.nextAlternative == .optionDown)
+    // The alternatives keys are retired: unbound.
+    #expect(b.nextAlternative == nil && b.previousAlternative == nil)
 }
 
 @Test func styleKeysSwitchOnlyWhenAvailable() {

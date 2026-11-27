@@ -7,6 +7,19 @@ import HunchCore
     private let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
     private let size = CGSize(width: 300, height: 90)
 
+    @Test func placementChangedFollowsTheBoxAndCaret() {
+        let caret = CGRect(x: 200, y: 100, width: 1, height: 18)
+        let box = CGRect(x: 100, y: 80, width: 600, height: 50)
+        let a = CaretGeometry(caretRect: caret, fieldFrame: box, quality: .derived)
+        #expect(!SuggestedRepliesBubble.placementChanged(a, a))
+        let jitter = CaretGeometry(caretRect: caret, fieldFrame: box.offsetBy(dx: 0.3, dy: 0), quality: .derived)
+        #expect(!SuggestedRepliesBubble.placementChanged(a, jitter))
+        let settled = CaretGeometry(caretRect: caret, fieldFrame: box.offsetBy(dx: 0, dy: -30), quality: .derived)
+        #expect(SuggestedRepliesBubble.placementChanged(a, settled))
+        let noBox = CaretGeometry(caretRect: caret, fieldFrame: nil, quality: .derived)
+        #expect(SuggestedRepliesBubble.placementChanged(a, noBox))
+    }
+
     @Test func sitsAboveTheCaret() {
         let caret = CGRect(x: 200, y: 100, width: 1, height: 18)
         let f = SuggestedRepliesBubble.placement(size: size, caret: caret, visible: screen)

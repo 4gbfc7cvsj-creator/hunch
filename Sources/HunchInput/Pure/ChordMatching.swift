@@ -31,4 +31,11 @@ public enum ChordMatcher {
 
     /// The Tab key with no modifier: what "Accept with Tab: off" hands back to the app.
     public static func isPlainTab(_ chord: KeyChord) -> Bool { isTabBased(chord) && mask(chord.modifiers) == 0 }
+
+    public static let backspaceKeyCode: UInt16 = 51
+
+    /// Backspace (Delete) with no modifier: the key that undoes an automatic fix.
+    public static func isPlainBackspace(_ chord: KeyChord) -> Bool {
+        chord.keyCode == backspaceKeyCode && mask(chord.modifiers) == 0
+    }
 }

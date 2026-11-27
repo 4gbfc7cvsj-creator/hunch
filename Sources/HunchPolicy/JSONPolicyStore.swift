@@ -145,7 +145,6 @@ public final class JSONPolicyStore: AppPolicyStoring {
                               categories: categories.isEmpty ? nil : categories,
                               migrations: s.migrations.isEmpty ? nil : s.migrations.sorted())
         let data = try encoder.encode(file)
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try data.write(to: url, options: .atomic)
+        try PrivateFile.write(data, to: url)
     }
 }

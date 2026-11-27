@@ -50,6 +50,10 @@ public struct KeyChord: Codable, Hashable, Sendable {
 ///
 /// Unset keys are saved as JSON null, so clearing one in Settings survives a reload (a missing key
 /// takes the default instead).
+///
+/// Retired (2026-11-26): Suggest now, Pause in this app, Turn Hunch on/off, next/previous
+/// alternative suggestion, Fix a missed word and Undo a fix (Backspace undoes fixes now). They are
+/// unset by default, have no Settings row, and saved keys are ignored on load, so nothing reaches them.
 public struct AcceptBindings: Codable, Sendable, Equatable {
     public var word: KeyChord?
     public var full: KeyChord?
@@ -78,11 +82,11 @@ public struct AcceptBindings: Codable, Sendable, Equatable {
     /// one style is on.
     public var styleNext: KeyChord?
     public var stylePrevious: KeyChord?
-    public init(word: KeyChord? = .tab, full: KeyChord? = .optionTab, forceActivate: KeyChord? = .controlTab,
+    public init(word: KeyChord? = .tab, full: KeyChord? = .optionTab, forceActivate: KeyChord? = nil,
                 toggleCurrentApp: KeyChord? = nil, toggleGlobal: KeyChord? = nil,
-                nextAlternative: KeyChord? = .optionDown, previousAlternative: KeyChord? = .optionUp,
+                nextAlternative: KeyChord? = nil, previousAlternative: KeyChord? = nil,
                 writeForMe: KeyChord? = .optionShiftTab, catchUp: KeyChord? = nil,
-                revertFix: KeyChord? = .controlShiftZ,
+                revertFix: KeyChord? = nil,
                 styleNext: KeyChord? = .optionShiftRight, stylePrevious: KeyChord? = .optionShiftLeft) {
         self.styleNext = styleNext
         self.stylePrevious = stylePrevious
@@ -110,15 +114,12 @@ public struct AcceptBindings: Codable, Sendable, Equatable {
             guard c.contains(k) else { return fallback }
             return try c.decodeIfPresent(KeyChord.self, forKey: k)  // null = unset
         }
+        // The retired shortcuts stay unset whatever was saved.
         self.init(word: try key(.word, d.word), full: try key(.full, d.full),
-                  forceActivate: try key(.forceActivate, d.forceActivate),
-                  toggleCurrentApp: try key(.toggleCurrentApp, d.toggleCurrentApp),
-                  toggleGlobal: try key(.toggleGlobal, d.toggleGlobal),
-                  nextAlternative: try key(.nextAlternative, d.nextAlternative),
-                  previousAlternative: try key(.previousAlternative, d.previousAlternative),
+                  forceActivate: nil, toggleCurrentApp: nil, toggleGlobal: nil,
+                  nextAlternative: nil, previousAlternative: nil,
                   writeForMe: try key(.writeForMe, d.writeForMe),
-                  catchUp: try key(.catchUp, d.catchUp),
-                  revertFix: try key(.revertFix, d.revertFix),
+                  catchUp: nil, revertFix: nil,
                   styleNext: try key(.styleNext, d.styleNext),
                   stylePrevious: try key(.stylePrevious, d.stylePrevious))
     }
@@ -590,6 +591,10 @@ public struct HunchSettings: Codable, Sendable, Equatable {
     /// starts one at once).
     public var autocorrectRewritePause: Double = 1.0
     public static let rewritePauseRange: ClosedRange<Double> = 0.5...3
+    /// Test setting: after an automatic fix, the first Backspace deletes as usual and a second one
+    /// within this many ms undoes the fix (keeping the first deletion). 0: the first Backspace undoes.
+    public var autocorrectUndoDoubleTapMs: Int = 300
+    public static let undoDoubleTapRange: ClosedRange<Int> = 0...800
     /// "Allow chat shorthand" (u, thx, gonna stay as typed): the global gate for the per-app switch,
     /// which is on in Chats. Off: shorthand is corrected everywhere. On by default.
     public var autocorrectLeaveChatShorthand: Bool = true

@@ -402,6 +402,7 @@ private struct SettingsRoot: View {
         } detail: {
             detail
                 .navigationTitle(current.title)
+                .environment(\.openURL, SettingsLinks.action)
         }
         .frame(minWidth: 800, minHeight: 520)
     }

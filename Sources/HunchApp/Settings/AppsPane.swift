@@ -873,15 +873,13 @@ private struct PatchEditor: View {
                 }
             } header: { Text("Suggestions") } footer: {
                 if suggestionsOffGenerally {
-                    Text("Suggestions are off in General, so only autocorrect and dictation settings are shown.")
-                        .font(.caption).foregroundStyle(.secondary)
+                    FooterText("Suggestions are off in \(SettingsLinks.md("General", "general.suggestions")), so only autocorrect and dictation settings are shown.")
                 } else if suggestionsOff {
-                    Text("Suggestions are off here, so the settings below don\u{2019}t apply.")
-                        .font(.caption).foregroundStyle(.secondary)
+                    FooterText("Suggestions are off here, so the settings below don\u{2019}t apply.")
                 }
             }
             // Autocorrect works with suggestions off, so it sits outside the greyed-out group.
-            Section("Autocorrect") {
+            Section {
                 tri("Suggest Corrections", \.autocorrectEnabled, autocorrectOffGenerally ? false : base?.autocorrect)
                 .searchAnchor("apps.autocorrect")
                 if !autocorrectOffGenerally {
@@ -905,6 +903,10 @@ private struct PatchEditor: View {
                     tri("Apply Text Replacements", \.appliesTextReplacements, base?.appliesTextReplacements)
                     .searchAnchor("apps.textReplacements")
                         .disabled(autocorrectOff)
+                }
+            } header: { Text("Autocorrect") } footer: {
+                if !autocorrectOffGenerally, model.patch(key).autocorrectStrength != nil, !strongAllowed(base) {
+                    FooterText("Tips: \(AutocorrectCopy.strongNeedsAutomatic)")
                 }
             }
             if suggestionsOffGenerally {
@@ -935,9 +937,6 @@ private struct PatchEditor: View {
                         shellCommandRow(inherited: base?.shellCommandMode)
                         .searchAnchor("apps.shell")
                     }
-                    WriteShapeRows(model: model, key: key, inherited: shapeInherited,
-                                   isDomain: isDomain && shapeFromCategory == nil,
-                                   inheritedFrom: shapeFromCategory)
                     if !isCategory {
                         choice("Insertion method", \.insertion, [
                             (.unicodeEvents, "Type it"), (.paste, "Paste"), (.pasteMatchStyle, "Paste, match style")],
@@ -953,6 +952,9 @@ private struct PatchEditor: View {
                         }
                     }
                 }
+                WriteShapeRows(model: model, key: key, inherited: shapeInherited,
+                               isDomain: isDomain && shapeFromCategory == nil,
+                               inheritedFrom: shapeFromCategory)
                 Section("Context") {
                     tri("Allow screen context", \.screenContextAllowed, base?.screenContext)
                     .searchAnchor("apps.screenContext")
@@ -1090,7 +1092,7 @@ private struct PatchEditor: View {
                 Text("Own look").tag(true)
             } label: {
                 SettingLabel("Look", info: "The effect, color and strength of suggestions here. Default follows "
-                             + (isCategory ? "Settings \u{2192} Appearance." : "the category\u{2019}s look if it has one, else Settings \u{2192} Appearance."))
+                             + (isCategory ? "\(SettingsLinks.md("Appearance", "appearance"))." : "the category\u{2019}s look if it has one, else \(SettingsLinks.md("Appearance", "appearance"))."))
             }
             .searchAnchor("apps.look")
             if let look = p.appearance {
@@ -1254,15 +1256,20 @@ private struct PatchEditor: View {
         }
     }
 
+    /// Apply Corrections Automatically as it comes out here: Strong needs it (its reread changes text itself).
+    private func strongAllowed(_ base: InheritedPolicy?) -> Bool {
+        let general = model.generalSettings
+        return general.autocorrectEnabled && general.autocorrectFixAutomatically
+            && (model.patch(key).fixAutomaticallyAllowed ?? base?.fixAutomatically ?? true)
+    }
+
     /// Per-app Strength: a Custom toggle (off = Default: the category's, else the general one), and the same
     /// slider as in Settings → Autocorrect once it is on.
     @ViewBuilder private func strengthRow(_ base: InheritedPolicy?) -> some View {
         let chosen = model.patch(key).autocorrectStrength
         let fromCategory = model.categoryPatch(for: key)?.autocorrectStrength
         let general = model.generalSettings
-        // Apply Corrections Automatically as it comes out here: Strong needs it (its reread changes text itself).
-        let automatic = general.autocorrectEnabled && general.autocorrectFixAutomatically
-            && (model.patch(key).fixAutomaticallyAllowed ?? base?.fixAutomatically ?? true)
+        let automatic = strongAllowed(base)
         let inherited = AutocorrectStrength.allowed(base?.strength ?? fromCategory ?? general.autocorrectStrength,
                                                     automatic: automatic)
         Toggle(isOn: Binding(
@@ -1285,7 +1292,6 @@ private struct PatchEditor: View {
                                                                                     automatic: automatic)
                            } }),
                        value: shown.title,
-                       tip: automatic ? nil : AttributedString(AutocorrectCopy.strongNeedsAutomatic),
                        maxIndex: AutocorrectStrength.maxIndex(automatic: automatic))
         }
     }
@@ -1344,7 +1350,7 @@ private struct PatchEditor: View {
                        index: Binding(
                            get: { GeneralPane.minWordsIndex(chosen) },
                            set: { i in model.edit(key) { $0.minWordsBeforeSuggesting = GeneralPane.minWordsRange.lowerBound + i } }),
-                       value: GeneralPane.wordsLabel(GeneralPane.minWordsRange.lowerBound + GeneralPane.minWordsIndex(chosen)),
+                       value: GeneralPane.minWordsLabel(chosen),
                        detailAsInfo: true)
         }
     }
@@ -1436,7 +1442,7 @@ private struct PatchEditor: View {
 
 // MARK: - Write for me shape
 
-/// "Write for me" picker plus the wording of the chosen shape: presets (Email, Message, AI prompt)
+/// The "Write for me" section: the picker plus the wording of the chosen shape: presets (Email, Message, AI prompt)
 /// edited once for every app, and the user's saved custom shapes.
 private struct WriteShapeRows: View {
     let model: AppsModel
@@ -1490,30 +1496,47 @@ private struct WriteShapeRows: View {
                 case .new: model.newCustomShape(startingFrom: startText, for: key)
                 }
             })
-        Picker(selection: binding) {
-            Text(inheritedFrom.map { "Default (\($0): \(defaultName))" } ?? "Default (\(defaultName))").tag(Choice.inherit)
-            Divider()
-            ForEach(WriteShapeLibrary.presets, id: \.self) { Text(Self.names[$0]!).tag(Choice.preset($0)) }
-            if !library.custom.isEmpty {
+        Section {
+            Picker(selection: binding) {
+                Text(inheritedFrom.map { "Default (\($0): \(defaultName))" } ?? "Default (\(defaultName))").tag(Choice.inherit)
                 Divider()
-                ForEach(library.custom) { Text($0.name).tag(Choice.custom($0.id)) }
+                ForEach(WriteShapeLibrary.presets, id: \.self) { Text(Self.names[$0]!).tag(Choice.preset($0)) }
+                if !library.custom.isEmpty {
+                    Divider()
+                    ForEach(library.custom) { Text($0.name).tag(Choice.custom($0.id)) }
+                }
+                Divider()
+                Text("New Custom Shape\u{2026}").tag(Choice.new)
+            } label: {
+                SettingLabel("Write for me", info: "What a draft looks like here. Each shape is an instruction given to the model. Adaptive picks an email, a chat message, a paragraph or a prompt for an AI from the app or site.")
             }
-            Divider()
-            Text("New Custom Shape\u{2026}").tag(Choice.new)
-        } label: {
-            SettingLabel("Write for me", info: "What a draft looks like here. Adaptive picks an email, a chat message, a paragraph or a prompt for an AI from the app or site.")
+            .searchAnchor("apps.writeShape")
+            editor
+                .confirmationDialog("Delete \u{201C}\(confirmDelete?.name ?? "")\u{201D}?",
+                                    isPresented: Binding(get: { confirmDelete != nil }, set: { if !$0 { confirmDelete = nil } }),
+                                    presenting: confirmDelete) { shape in
+                    Button("Delete", role: .destructive) { model.deleteCustomShape(shape.id) }
+                } message: { shape in
+                    let users = model.places(using: shape.id)
+                    Text(users.isEmpty ? "No app or site uses it."
+                         : "\(users.joined(separator: ", ")) will go back to Default.")
+                }
+        } footer: {
+            FooterText("Tips: " + footerTip)
         }
-        .searchAnchor("apps.writeShape")
-        editor
-            .confirmationDialog("Delete \u{201C}\(confirmDelete?.name ?? "")\u{201D}?",
-                                isPresented: Binding(get: { confirmDelete != nil }, set: { if !$0 { confirmDelete = nil } }),
-                                presenting: confirmDelete) { shape in
-                Button("Delete", role: .destructive) { model.deleteCustomShape(shape.id) }
-            } message: { shape in
-                let users = model.places(using: shape.id)
-                Text(users.isEmpty ? "No app or site uses it."
-                     : "\(users.joined(separator: ", ")) will go back to Default.")
-            }
+    }
+
+    /// Under the section: what editing the shown instruction changes, or how to edit one.
+    private var footerTip: String {
+        switch current {
+        case .preset(let shape):
+            "Changes apply in every app and site that uses \(Self.names[shape]!)."
+        case .custom(let id):
+            "Changes apply in every app and site that uses \u{201C}\(library.custom(id)?.name ?? "")\u{201D}. "
+                + "Polish ignores custom shapes and keeps the text\u{2019}s own shape."
+        case .inherit, .new:
+            "Pick a shape to see and edit its instruction."
+        }
     }
 
     @ViewBuilder private var editor: some View {
@@ -1522,8 +1545,6 @@ private struct WriteShapeRows: View {
             VStack(alignment: .leading, spacing: 6) {
                 textBox(Binding(get: { model.presetText(shape) }, set: { model.setPresetText(shape, $0) }))
                 HStack {
-                    Text("The instruction \(Self.names[shape]!) gives the model. Changes apply in every app and site that uses \(Self.names[shape]!).")
-                        .font(.caption).foregroundStyle(.secondary)
                     Spacer()
                     if library.editedText(shape) != nil {
                         Text("Edited").font(.caption).foregroundStyle(.secondary)
@@ -1557,8 +1578,6 @@ private struct WriteShapeRows: View {
                         }
                         .fixedSize()
                     }
-                    Text("Changes apply in every app and site that uses \u{201C}\(shape.name)\u{201D}. Polish ignores custom shapes and keeps the text\u{2019}s own shape.")
-                        .font(.caption).foregroundStyle(.secondary)
                 }
             }
         case .inherit, .new:
@@ -1568,24 +1587,18 @@ private struct WriteShapeRows: View {
 
     @ViewBuilder private var inheritedNote: some View {
         if isDomain {
-            Text("Follows the browser\u{2019}s choice. Pick a shape to see and edit its instruction.")
+            Text("Follows the browser\u{2019}s choice.")
                 .font(.caption).foregroundStyle(.secondary)
         } else if let custom = library.custom(inherited?.writeCustomShapeID) {
             readOnly(custom.text)
         } else if let shape = inherited?.writeShape, WriteShapeLibrary.presets.contains(shape) {
             readOnly(model.presetText(shape))
-        } else {
-            Text("Adaptive picks Email, Message, a paragraph or AI prompt from the app or site. Pick a shape to see and edit its instruction.")
-                .font(.caption).foregroundStyle(.secondary)
         }
     }
 
     private func readOnly(_ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(text).font(.body).foregroundStyle(.secondary).textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Text("Pick a shape above to edit its instruction.").font(.caption).foregroundStyle(.tertiary)
-        }
+        Text(text).font(.body).foregroundStyle(.secondary).textSelection(.enabled)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func textBox(_ text: Binding<String>) -> some View {

@@ -5,8 +5,6 @@ import SwiftUI
 
 struct GeneralPane: View {
     let model: SettingsModel
-    /// The sidebar's selected pane; the length tip's link switches it to Apps & Sites.
-    @AppStorage("settingsPane") private var selectedPane = "general"
     @State private var macPredictionsOn = MacInlinePredictions.isEnabled
 
     var body: some View {
@@ -19,11 +17,6 @@ struct GeneralPane: View {
             macPredictionsOn = MacInlinePredictions.isEnabled
         }
         .onAppear { macPredictionsOn = MacInlinePredictions.isEnabled }
-        .environment(\.openURL, OpenURLAction { url in
-            guard url.scheme == "hunch-settings" else { return .systemAction }
-            selectedPane = url.host() ?? "general"
-            return .handled
-        })
     }
 
     @ViewBuilder private var content: some View {
@@ -39,13 +32,13 @@ struct GeneralPane: View {
                 }
             }
             LoginItemSection()
-            Section("Suggestions") {
+            Section {
                 Toggle("Suggestions", isOn: model.bind(\.enabled))
                 .searchAnchor("general.suggestions")
                 // The rest only matters while suggestions are on.
                 if model.settings.enabled {
                     Toggle(isOn: model.bind(\.midLineByDefault)) {
-                        SettingLabel("Mid-sentence suggestion", info: "Suggest inside existing text, not just at the end. Apps and sites can override this in Apps & Sites.")
+                        SettingLabel("Mid-sentence suggestion", info: "Suggest inside existing text, not just at the end.")
                     }
                     .searchAnchor("general.midSentence")
                     StopSlider(title: "Suggestion length",
@@ -54,8 +47,7 @@ struct GeneralPane: View {
                                index: Binding(
                                    get: { LengthPreset.allCases.firstIndex(of: model.settings.length) ?? 0 },
                                    set: { model.set(\.length, to: LengthPreset.allCases[$0]) }),
-                               value: Self.lengthName(model.settings.length),
-                               tip: Self.lengthTip)
+                               value: Self.lengthName(model.settings.length))
                     .searchAnchor("general.length")
                     StopSlider(title: "Start suggesting after",
                                detail: "Words typed on the line before suggestions appear.",
@@ -63,8 +55,7 @@ struct GeneralPane: View {
                                index: Binding(
                                    get: { Self.minWordsIndex(model.settings.minWordsBeforeSuggesting) },
                                    set: { model.set(\.minWordsBeforeSuggesting, to: Self.minWordsRange.lowerBound + $0) }),
-                               value: Self.wordsLabel(Self.minWordsRange.lowerBound
-                                                      + Self.minWordsIndex(model.settings.minWordsBeforeSuggesting)),
+                               value: Self.minWordsLabel(model.settings.minWordsBeforeSuggesting),
                                detailAsInfo: true)
                     .searchAnchor("general.startAfter")
                     LabeledContent {
@@ -154,6 +145,13 @@ struct GeneralPane: View {
                     }
                     .searchAnchor("general.emojiPeople")
                 }
+            } header: {
+                Text("Suggestions")
+            } footer: {
+                if model.settings.enabled {
+                    FooterText("Tips: \(SettingsLinks.md("Apps & Sites", "apps")) can set mid-sentence suggestions and "
+                               + "length per app, for example shorter suggestions for chat apps and longer ones for work apps.")
+                }
             }
             Section("Dictation") {
                 DictationGeneralRows(model: model)
@@ -183,10 +181,6 @@ struct GeneralPane: View {
         return "Names work in \(list), from your macOS languages. A full-width colon (：) works too, so you can search without switching input methods."
     }
 
-    /// Under the length slider: chat and work apps usually want different lengths.
-    static let lengthTip: AttributedString = (try? AttributedString(markdown:
-        "Tip: set shorter suggestions for chat apps and longer ones for work apps in [Apps & Sites](hunch-settings://apps).")) ?? AttributedString()
-
     static func lengthName(_ p: LengthPreset) -> String {
         switch p {
         case .short: "Short"
@@ -208,44 +202,35 @@ struct ShortcutsPane: View {
                 .searchAnchor("shortcuts.acceptWord")
                 recorder("Accept whole suggestion", \.bindings.full)
                 .searchAnchor("shortcuts.acceptAll")
-                recorder("Next alternative suggestion", \.bindings.nextAlternative)
-                .searchAnchor("shortcuts.nextAlternative")
-                recorder("Previous alternative suggestion", \.bindings.previousAlternative)
-                .searchAnchor("shortcuts.previousAlternative")
                 recorder("Next suggestion style", \.bindings.styleNext)
                 .searchAnchor("shortcuts.styleNext")
                 recorder("Previous suggestion style", \.bindings.stylePrevious)
                 .searchAnchor("shortcuts.stylePrevious")
-                recorder("Suggest now", \.bindings.forceActivate)
-                .searchAnchor("shortcuts.suggestNow")
-                recorder("Write for me", \.bindings.writeForMe)
+                recorder("Write for me", \.bindings.writeForMe,
+                         info: "Turns the instruction you typed (or the text you selected) into a draft, or polishes it.")
                 .searchAnchor("shortcuts.writeForMe")
-                recorder("Fix a missed word", \.bindings.catchUp)
-                .searchAnchor("shortcuts.catchUp")
-                recorder("Undo a fix", \.bindings.revertFix)
-                .searchAnchor("shortcuts.revertFix")
                 DictationShortcutRow(model: model)
                 .searchAnchor("shortcuts.dictation")
                 VoiceInstructionShortcutRow(model: model)
                 .searchAnchor("shortcuts.voiceInstruction")
-                recorder("Pause in this app", \.bindings.toggleCurrentApp)
-                .searchAnchor("shortcuts.pauseApp")
-                recorder("Turn Hunch on/off", \.bindings.toggleGlobal)
-                .searchAnchor("shortcuts.toggleGlobal")
             } footer: {
-                Text("Click a field and press the keys. Delete clears it, Esc cancels. Write for me turns the "
-                     + "instruction you typed (or the text you selected) into a draft, or polishes it. Fix a missed "
-                     + "word applies a spelling fix you typed past, newest first, and leaves the cursor where it is; "
-                     + "the key only does this while such a fix is waiting. Undo a fix puts back what you typed "
-                     + "for the newest correction in the field you're in; press it again for the one before.")
+                FooterText("Tips: Click a field and press the keys. Delete clears it, Esc cancels. Letters, numbers, Space and Return need ⌃, ⌥ or ⌘.")
             }
         }
         .formStyle(.grouped)
         .searchScrollTarget("shortcuts")
     }
 
-    private func recorder(_ title: String, _ keyPath: WritableKeyPath<HunchSettings, KeyChord?> & Sendable) -> some View {
-        LabeledContent(title) { KeyRecorder(chord: model.bind(keyPath)).frame(width: 150, height: 24) }
+    private func recorder(_ title: String, _ keyPath: WritableKeyPath<HunchSettings, KeyChord?> & Sendable,
+                          info: String? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            LabeledContent {
+                KeyRecorder(chord: model.bind(keyPath)).frame(width: 150, height: 24)
+            } label: {
+                SettingLabel(title, info: info)
+            }
+            ShortcutConflictWarning(settings: model.settings, keyPath: keyPath)
+        }
     }
 }
 
@@ -259,8 +244,6 @@ struct StopSlider: View {
     let value: String
     /// The detail doesn't change with the slider: show it behind an info icon instead.
     var detailAsInfo = false
-    /// An extra grey line under the detail (may hold a link).
-    var tip: AttributedString? = nil
     /// The highest stop that may be picked (nil: the last); stops above it stay visible but the
     /// slider snaps back to it.
     var maxIndex: Int? = nil
@@ -280,7 +263,6 @@ struct StopSlider: View {
             } else {
                 Text(title)
                 Text(detail)
-                if let tip { Text(tip) }
             }
         }
     }
@@ -295,6 +277,13 @@ extension GeneralPane {
     }
 
     static func wordsLabel(_ n: Int) -> String { n == 1 ? "1 word" : "\(n) words" }
+
+    /// The value shown beside the slider: the stored count, even one below the slider's first stop
+    /// (a 0 from a URL command or an older build shows as "0 words", not "1 word").
+    static func minWordsLabel(_ stored: Int) -> String {
+        stored < minWordsRange.lowerBound ? wordsLabel(max(stored, 0))
+            : wordsLabel(minWordsRange.lowerBound + minWordsIndex(stored))
+    }
 
     /// The slider stop closest to a stored value (older values like 150 snap to the nearest).
     static func pauseStopIndex(_ ms: Int) -> Int {

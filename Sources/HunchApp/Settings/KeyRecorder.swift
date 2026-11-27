@@ -4,36 +4,18 @@ import SwiftUI
 
 /// Human-readable chord, e.g. "⌥⇧Tab".
 func chordDescription(_ chord: KeyChord?) -> String {
-    guard let chord else { return "Not set" }
-    var out = ""
-    if chord.modifiers & 0x40000 != 0 { out += "⌃" }
-    if chord.modifiers & 0x80000 != 0 { out += "⌥" }
-    if chord.modifiers & 0x20000 != 0 { out += "⇧" }
-    if chord.modifiers & 0x100000 != 0 { out += "⌘" }
-    return out + keyName(chord.keyCode)
+    chord?.displayName ?? "Not set"
 }
 
-private func keyName(_ code: UInt16) -> String {
-    let names: [UInt16: String] = [
-        48: "Tab", 53: "Esc", 49: "Space", 36: "Return", 51: "Delete", 123: "←", 124: "→", 125: "↓", 126: "↑",
-        0: "A", 11: "B", 8: "C", 2: "D", 14: "E", 3: "F", 5: "G", 4: "H", 34: "I", 38: "J", 40: "K", 37: "L",
-        46: "M", 45: "N", 31: "O", 35: "P", 12: "Q", 15: "R", 1: "S", 17: "T", 32: "U", 9: "V", 13: "W",
-        7: "X", 16: "Y", 6: "Z", 18: "1", 19: "2", 20: "3", 21: "4", 23: "5", 22: "6", 26: "7", 28: "8",
-        25: "9", 29: "0", 50: "`", 27: "-", 24: "=", 33: "[", 30: "]", 42: "\\", 41: ";", 39: "'", 43: ",",
-        47: ".", 44: "/",
-    ]
-    if let n = names[code] { return n }
-    if (122...126).contains(code) || code == 120 || code == 99 { return "F\(code)" }
-    return "Key \(code)"
-}
-
-/// Click, then press the shortcut. Esc cancels; Delete clears.
+/// Click, then press the shortcut. Esc cancels; Delete clears. A key that types text needs ⌃, ⌥ or ⌘.
 final class RecorderButton: NSButton {
     var chord: KeyChord? { didSet { refreshTitle() } }
     /// Shown with no chord set.
     var emptyTitle = "Not set" { didSet { refreshTitle() } }
     var onChange: ((KeyChord?) -> Void)?
-    private var recording = false { didSet { refreshTitle() } }
+    private var recording = false { didSet { hint = nil; refreshTitle() } }
+    /// Shown instead of "Press shortcut…" after a key that would swallow typing.
+    private var hint: String? { didSet { refreshTitle() } }
 
     override var acceptsFirstResponder: Bool { true }
 
@@ -45,7 +27,9 @@ final class RecorderButton: NSButton {
     }
     required init?(coder: NSCoder) { fatalError("unused") }
 
-    private func refreshTitle() { title = recording ? "Press shortcut…" : chord.map(chordDescription) ?? emptyTitle }
+    private func refreshTitle() {
+        title = recording ? hint ?? "Press shortcut…" : chord.map(chordDescription) ?? emptyTitle
+    }
 
     @objc private func begin() {
         recording = true
@@ -77,6 +61,11 @@ final class RecorderButton: NSButton {
             onChange?(nil)
         } else {
             let new = KeyChord(keyCode: event.keyCode, modifiers: mods & mask)
+            if new.typesText {  // a bare "A" would swallow every "a": keep recording
+                hint = "Add ⌃, ⌥ or ⌘"
+                NSSound.beep()
+                return
+            }
             chord = new
             onChange?(new)
         }
@@ -100,5 +89,20 @@ struct KeyRecorder: NSViewRepresentable {
         b.emptyTitle = emptyTitle
         b.chord = chord
         b.onChange = { new in chord = new }
+    }
+}
+
+/// Orange warning under a shortcut row when another listed shortcut uses the same keys.
+struct ShortcutConflictWarning: View {
+    let settings: HunchSettings
+    let keyPath: KeyPath<HunchSettings, KeyChord?>
+
+    var body: some View {
+        let others = settings.shortcutConflicts(for: keyPath)
+        if !others.isEmpty {
+            Label("\(others.joined(separator: " and ")) also uses this shortcut. Pick another one.",
+                  systemImage: "exclamationmark.triangle.fill")
+                .font(.caption).foregroundStyle(.orange)
+        }
     }
 }

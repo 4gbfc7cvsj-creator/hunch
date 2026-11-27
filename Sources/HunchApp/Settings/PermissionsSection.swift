@@ -113,7 +113,7 @@ extension PermissionsModel {
                 + "history, or a remote endpoint; the text right at your cursor is used as typed."
             if settings.learning.enabled {
                 text += " Because learning is on, words you use and sentences you typed are saved encrypted on this "
-                    + "Mac; see Personalization."
+                    + "Mac; see \(SettingsLinks.md("Personalization", "personalization.learnWords"))."
             }
             out.append(text)
         } else {

@@ -265,9 +265,17 @@ struct ModelsPane: View {
                 SettingLabel(Self.title(use), info: model.dynamicSpeechModel == nil ? Self.explanation(use) : nil)
                     .searchAnchor(Self.anchor(use))
             } footer: {
-                if isLast {
-                    Text("Models download from \(ModelCatalog.host), only when you press Download.")
-                        .font(.caption).foregroundStyle(.secondary)
+                let needsFolder = model.dynamicSpeechModel == nil && !model.canDownload
+                // Only when there is something to say: an empty footer still adds space under the box.
+                if needsFolder || isLast {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if needsFolder {
+                            FooterText("Choose a folder in \(SettingsLinks.md("Models folder", "model.folder")) to download a speech model into.")
+                        }
+                        if isLast {
+                            FooterText("Models download from \(ModelCatalog.host), only when you press Download.")
+                        }
+                    }
                 }
             }
         } else {
@@ -331,8 +339,7 @@ struct ModelsPane: View {
                 .searchAnchor(Self.anchor(use))
         } footer: {
             if isLast {
-                Text("Models download from \(ModelCatalog.host), only when you press Download.")
-                    .font(.caption).foregroundStyle(.secondary)
+                FooterText("Models download from \(ModelCatalog.host), only when you press Download.")
             }
         }
     }
@@ -482,10 +489,6 @@ struct SpeechModelRows: View {
     var body: some View {
         let rows = model.catalog[.speechToText] ?? []
         let selected = model.effectiveSpeechModel
-        if !model.canDownload {
-            Text("Choose a models folder (Settings → Performance & Models) to download a speech model into.")
-                .font(.caption).foregroundStyle(.secondary)
-        }
         ForEach(rows.sorted { $0.byteSize < $1.byteSize }) { row in
             if row.state == .downloaded {
                 Button {

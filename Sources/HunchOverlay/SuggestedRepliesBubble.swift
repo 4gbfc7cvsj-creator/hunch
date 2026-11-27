@@ -157,6 +157,27 @@ public final class SuggestedRepliesBubble {
         })
     }
 
+    /// True when `new` would put the chips somewhere else than `old` (box or caret moved by a point or more).
+    public nonisolated static func placementChanged(_ old: CaretGeometry, _ new: CaretGeometry) -> Bool {
+        func differs(_ a: CGRect, _ b: CGRect) -> Bool {
+            abs(a.minX - b.minX) >= 1 || abs(a.minY - b.minY) >= 1 || abs(a.width - b.width) >= 1 || abs(a.height - b.height) >= 1
+        }
+        if differs(old.caretRect, new.caretRect) { return true }
+        switch (old.fieldFrame, new.fieldFrame) {
+        case (nil, nil): return false
+        case let (a?, b?): return differs(a, b)
+        default: return true
+        }
+    }
+
+    /// Puts the shown chips where `geometry` says, when it differs from where they were placed
+    /// (the box finished laying out, or moved).
+    public func reposition(to geometry: CaretGeometry) {
+        guard !chips.isEmpty, let (old, layout) = chipPlacement, Self.placementChanged(old, geometry) else { return }
+        chipPlacement = (geometry, layout)
+        layoutChips(geometry: geometry, layout: layout)
+    }
+
     /// Moves the highlight (Tab) without rebuilding the bubble. Chips are laid out again: the
     /// highlighted one grows to show its whole reply.
     public func setHighlight(_ index: Int?) {

@@ -104,6 +104,14 @@ public enum EffectWrap {
         return delays.map { $0 * maxStagger / last }
     }
 
+    /// How long a streamed line plays before the next one may start: a sweeping effect hands over once
+    /// it has crossed the line; a whole-line effect once the line has settled. 0 for None.
+    public static func streamGap(_ recipe: PopInRecipe, characters: Int) -> TimeInterval {
+        guard !recipe.isEmpty, characters > 0 else { return 0 }
+        let s = sweep(recipe, characters: characters)
+        return s > 0 ? s : PopIn.totalDuration(recipe, characters: characters)
+    }
+
     /// Seconds until every line has settled in its final look.
     public static func settleTime(_ recipe: PopInRecipe, counts: [Int], delays: [TimeInterval]) -> TimeInterval {
         guard !recipe.isEmpty else { return 0 }

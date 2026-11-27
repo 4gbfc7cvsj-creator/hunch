@@ -293,20 +293,12 @@ public enum SettingsSearch {
     private static let shortcuts: [Entry] = [
         Entry("shortcuts.acceptWord", "Accept next word", keywords: ["hotkey", "keyboard", "tab", "key"]),
         Entry("shortcuts.acceptAll", "Accept whole suggestion", keywords: ["hotkey", "keyboard", "tab", "key"]),
-        Entry("shortcuts.nextAlternative", "Next alternative suggestion", keywords: ["hotkey", "keyboard", "cycle"]),
-        Entry("shortcuts.previousAlternative", "Previous alternative suggestion",
-              keywords: ["hotkey", "keyboard", "cycle"]),
         Entry("shortcuts.styleNext", "Next suggestion style", keywords: ["hotkey", "keyboard", "casual", "tone"]),
         Entry("shortcuts.stylePrevious", "Previous suggestion style", keywords: ["hotkey", "keyboard", "formal", "tone"]),
-        Entry("shortcuts.suggestNow", "Suggest now", keywords: ["hotkey", "keyboard", "force", "trigger"]),
         Entry("shortcuts.writeForMe", "Write for me", keywords: ["hotkey", "keyboard", "draft", "polish"]),
-        Entry("shortcuts.catchUp", "Fix a missed word", keywords: ["hotkey", "keyboard", "autocorrect"]),
-        Entry("shortcuts.revertFix", "Undo a fix", keywords: ["hotkey", "keyboard", "autocorrect", "revert"]),
         Entry("shortcuts.dictation", "Dictation shortcut", keywords: ["hotkey", "keyboard", "voice"]),
         Entry("shortcuts.voiceInstruction", "Voice instruction shortcut",
               keywords: ["hotkey", "keyboard", "experimental"], requires: .voiceInstructionsOn),
-        Entry("shortcuts.pauseApp", "Pause in this app", keywords: ["hotkey", "keyboard", "disable app"]),
-        Entry("shortcuts.toggleGlobal", "Turn Hunch on/off", keywords: ["hotkey", "keyboard", "disable"]),
     ]
 
     private static let models: [Entry] = [

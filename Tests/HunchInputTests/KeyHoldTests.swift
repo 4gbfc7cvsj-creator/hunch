@@ -89,20 +89,19 @@ import Testing
     #expect(!TapRules.shortcutConsumed(.catchUp, editableFocus: false, catchUpWaiting: true))
 }
 
-@Test func catchUpIsUnsetByDefaultAndSurvivesSaving() throws {
+@Test func catchUpIsUnsetAndDroppedOnLoad() throws {
     #expect(AcceptBindings().catchUp == nil)
     let old = try JSONDecoder().decode(AcceptBindings.self, from: Data(#"{"word":null}"#.utf8))
     #expect(old.catchUp == nil)
     var b = AcceptBindings()
     b.catchUp = KeyChord(keyCode: 3, modifiers: 0x100000)
     let back = try JSONDecoder().decode(AcceptBindings.self, from: JSONEncoder().encode(b))
-    #expect(back.catchUp == b.catchUp)
+    #expect(back.catchUp == nil)  // retired: a saved key is ignored
 }
 
 @Test func revertKeyIsConsumedOnlyWhileAFixCanBePutBack() {
     let chord = KeyChord.controlShiftZ
-    let bindings = AcceptBindings()
-    #expect(bindings.revertFix == chord)  // bound by default
+    let bindings = AcceptBindings(revertFix: chord)  // retired: unbound by default
     #expect(ArbiterRules.shortcut(for: chord, bindings: bindings) == .revertFix)
     #expect(TapRules.globalShortcutChords(bindings).contains(chord))
     let waiting = TapRules.decide(ghostVisible: false, editableFocus: true, chord: chord, snapshot: nil,
@@ -121,5 +120,51 @@ import Testing
     let back = try JSONDecoder().decode(AcceptBindings.self, from: JSONEncoder().encode(b))
     #expect(back.revertFix == nil)  // cleared stays cleared
     let old = try JSONDecoder().decode(AcceptBindings.self, from: Data("{}".utf8))
-    #expect(old.revertFix == .controlShiftZ)  // settings from before get the default
+    #expect(old.revertFix == nil)  // retired: unbound by default
+}
+
+@Test func backspaceUndoGateSinglePress() {
+    var g = BackspaceUndoGate()
+    #expect(g.decide(plainBackspace: true, autorepeat: false, now: 0) == .none)   // not armed
+    g.arm(true)
+    #expect(g.decide(plainBackspace: true, autorepeat: false, now: 0) == .undo)
+    #expect(g.decide(plainBackspace: false, autorepeat: false, now: 0) == .none)
+    g.apply(.none, now: 0)
+    #expect(!g.armed)
+}
+
+@Test func backspaceUndoGateDoubleTap() {
+    let ms: UInt64 = 1_000_000
+    var g = BackspaceUndoGate()
+    g.arm(true, doubleTapMilliseconds: 300)
+    #expect(g.decide(plainBackspace: true, autorepeat: false, now: 1000 * ms) == .firstTap)
+    g.apply(.firstTap, now: 1000 * ms)
+    #expect(g.armed)
+    #expect(g.decide(plainBackspace: true, autorepeat: false, now: 1250 * ms) == .undo)
+    #expect(g.decide(plainBackspace: true, autorepeat: true, now: 1250 * ms) == .none)   // held down
+    #expect(g.decide(plainBackspace: true, autorepeat: false, now: 1301 * ms) == .none)  // too slow
+    g.apply(.none, now: 1301 * ms)
+    #expect(!g.armed)
+
+    g.arm(true, doubleTapMilliseconds: 300)
+    g.apply(.firstTap, now: 0)
+    g.apply(.undo, now: 100 * ms)
+    #expect(!g.armed)
+}
+
+@Test func backspaceUndoGateTripleTap() {
+    let ms: UInt64 = 1_000_000
+    var g = BackspaceUndoGate()
+    g.arm(true, doubleTapMilliseconds: 300, followUps: 1)
+    g.apply(.firstTap, now: 0)
+    #expect(g.decide(plainBackspace: true, autorepeat: false, now: 200 * ms) == .undo)
+    g.apply(.undo, now: 200 * ms)
+    #expect(g.armed)                                                          // a third press may follow
+    #expect(g.decide(plainBackspace: true, autorepeat: false, now: 450 * ms) == .undo)  // within 300 of the 2nd
+    #expect(g.decide(plainBackspace: true, autorepeat: false, now: 600 * ms) == .none)
+    g.apply(.undo, now: 450 * ms)
+    #expect(!g.armed)
+
+    g.arm(true, doubleTapMilliseconds: 0, followUps: 1)                      // single press: no stages
+    #expect(g.followUps == 0)
 }

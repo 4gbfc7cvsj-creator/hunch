@@ -53,6 +53,20 @@ import Testing
         #expect(abs(capped.last! - 1.2) < 1e-9)
     }
 
+    @Test func streamedLinesWaitForTheLineBefore() {
+        var type = PopInRecipe()
+        type.typewriterOn = true
+        type.typewriterMsPerCharacter = 10
+        type.typewriterMaxMs = 10_000
+        #expect(abs(EffectWrap.streamGap(type, characters: 10) - 0.1) < 1e-9)
+        var fade = PopInRecipe()
+        fade.fadeOn = true
+        // A whole-line effect still hands over only once the line has settled, never at once.
+        #expect(EffectWrap.streamGap(fade, characters: 10) == PopIn.totalDuration(fade, characters: 10))
+        #expect(EffectWrap.streamGap(fade, characters: 10) > 0)
+        #expect(EffectWrap.streamGap(PopInRecipe(), characters: 10) == 0)
+    }
+
     @Test func noneSettlesAtOnce() {
         #expect(EffectWrap.settleTime(PopInRecipe(), counts: [5], delays: [0]) == 0)
     }

@@ -210,12 +210,9 @@ extension VoiceInstruction {
     public static func conflict(_ voice: KeyChord?, dictation: KeyChord?, bindings: AcceptBindings) -> String? {
         guard let voice else { return nil }
         let others: [(String, KeyChord?)] = [
-            ("Dictation", dictation), ("Write for me", bindings.writeForMe), ("Suggest now", bindings.forceActivate),
+            ("Dictation", dictation), ("Write for me", bindings.writeForMe),
             ("Accept next word", bindings.word), ("Accept whole suggestion", bindings.full),
-            ("Next alternative suggestion", bindings.nextAlternative),
-            ("Previous alternative suggestion", bindings.previousAlternative),
             ("Next suggestion style", bindings.styleNext), ("Previous suggestion style", bindings.stylePrevious),
-            ("Pause in this app", bindings.toggleCurrentApp), ("Turn Hunch on/off", bindings.toggleGlobal),
         ]
         return others.first { $0.1 == voice }?.0
     }

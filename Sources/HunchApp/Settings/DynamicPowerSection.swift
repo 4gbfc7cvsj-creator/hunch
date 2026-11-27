@@ -28,6 +28,10 @@ struct DynamicPowerSection: View {
             }
         } header: {
             Text("Performance")
+        } footer: {
+            if dynamic.enabled && !model.dynamicLanguageActive {
+                FooterText("The Language Model uses an endpoint, so only Speech to Text follows Dynamic Power Mode.")
+            }
         }
     }
 
@@ -41,10 +45,6 @@ struct DynamicPowerSection: View {
                     Text(reason).font(.caption).foregroundStyle(.secondary)
                 }
             }
-        }
-        if !model.dynamicLanguageActive {
-            Text("The Language Model uses an endpoint, so only Speech to Text follows Dynamic Power Mode.")
-                .font(.caption).foregroundStyle(.secondary)
         }
     }
 

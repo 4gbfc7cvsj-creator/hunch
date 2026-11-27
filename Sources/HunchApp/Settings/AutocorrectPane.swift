@@ -22,8 +22,14 @@ struct AutocorrectPane: View {
                     toggle(AutocorrectCopy.automaticTitle, \.autocorrectFixAutomatically,
                            info: AutocorrectCopy.automaticInfo)
                     .searchAnchor("autocorrect.automatic")
+                    if automatic { undoDoubleTapSlider }
                 }
-            } header: { Text("Corrections") }
+            } header: { Text("Corrections") } footer: {
+                if on && automatic {
+                    FooterText("Tips: " + (model.settings.autocorrectUndoDoubleTapMs > 0
+                                           ? AutocorrectCopy.undoTipDoubleTap : AutocorrectCopy.undoTipSingle))
+                }
+            }
 
             if on {
                 Section {
@@ -36,7 +42,6 @@ struct AutocorrectPane: View {
                                    set: { model.set(\.autocorrectStrength,
                                                     to: AutocorrectStrength.allowed(AutocorrectStrength.allCases[$0], automatic: automatic)) }),
                                value: shown.title,
-                               tip: automatic ? nil : AttributedString(AutocorrectCopy.strongNeedsAutomatic),
                                maxIndex: AutocorrectStrength.maxIndex(automatic: automatic))
                     .searchAnchor("autocorrect.strength")
                     // The pause only matters for Strong's reread.
@@ -56,8 +61,11 @@ struct AutocorrectPane: View {
                         .searchAnchor("autocorrect.rewritePause")
                     }
                 } header: { Text("Strength") } footer: {
-                    Text("Apps, sites and categories can use their own strength in Apps & Sites \u{2192} Autocorrect. In Dynamic Power Mode\u{2019}s Efficiency state, autocorrect acts like Light.")
-                        .font(.caption).foregroundStyle(.secondary)
+                    FooterText("Tips: " + (automatic ? "" : AutocorrectCopy.strongNeedsAutomatic + " ")
+                               + "Apps, sites and categories can use their own strength in "
+                               + SettingsLinks.md("Apps & Sites \u{2192} Autocorrect", "apps.autocorrect") + ". In "
+                               + SettingsLinks.md("Dynamic Power Mode", "model.dynamicPower")
+                               + "\u{2019}s Efficiency state, autocorrect acts like Light.")
                 }
                 Section {
                     toggle(AutocorrectCopy.capitalizationTitle, \.autocorrectCapitalization,
@@ -73,13 +81,32 @@ struct AutocorrectPane: View {
                            info: AutocorrectCopy.shorthandInfo)
                     .searchAnchor("autocorrect.shorthand")
                 } header: { Text("Customizations") } footer: {
-                    Text("Apps, sites and categories can override these switches in Apps & Sites \u{2192} Autocorrect.")
-                        .font(.caption).foregroundStyle(.secondary)
+                    FooterText("Tips: Apps, sites and categories can override these switches in "
+                               + SettingsLinks.md("Apps & Sites \u{2192} Autocorrect", "apps.autocorrect") + ".")
                 }
             }
         }
         .formStyle(.grouped)
         .searchScrollTarget("autocorrect")
+    }
+
+    /// Test slider: how quickly a second Backspace must follow the first to undo a fix.
+    private var undoDoubleTapSlider: some View {
+        let ms = model.settings.autocorrectUndoDoubleTapMs
+        let range = HunchSettings.undoDoubleTapRange
+        return LabeledContent {
+            HStack {
+                Slider(value: Binding(get: { Double(ms) },
+                                      set: { model.set(\.autocorrectUndoDoubleTapMs, to: Int(($0 / 25).rounded()) * 25) }),
+                       in: Double(range.lowerBound)...Double(range.upperBound), step: 25)
+                Text(ms == 0 ? "Single" : "\(ms) ms")
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .frame(width: 56, alignment: .trailing)
+            }
+        } label: {
+            SettingLabel(AutocorrectCopy.undoDoubleTapTitle, info: AutocorrectCopy.undoDoubleTapInfo)
+        }
     }
 
     private func toggle(_ title: String, _ keyPath: WritableKeyPath<HunchSettings, Bool> & Sendable,

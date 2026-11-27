@@ -140,8 +140,7 @@ public final class KnownPlacesStore: Sendable {
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             encoder.dateEncodingStrategy = .iso8601
             if let data = try? encoder.encode(file) {
-                try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-                try? data.write(to: url, options: .atomic)
+                try? PrivateFile.write(data, to: url)
             }
         }
         DispatchQueue.main.async { NotificationCenter.default.post(name: Self.didChange, object: self) }

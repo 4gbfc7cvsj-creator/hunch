@@ -18,7 +18,7 @@ struct SettingLabel: View {
     }
 }
 
-/// An "i" that shows `text` in a popover on click (click again or click away to close) or while
+/// An "i" that shows `text` (markdown links work, see `SettingsLinks`) in a popover on click (click again or click away to close) or while
 /// the pointer is on it. Inside a control's label, hover events don't always arrive, so the click
 /// is what makes it dependable. No system tooltip: it would show a second copy next to the popover.
 struct InfoTip: View {
@@ -46,13 +46,20 @@ struct InfoTip: View {
         .popover(isPresented: Binding(get: { showing },
                                       set: { showing = $0; if !$0 { pinned = false } }),
                  arrowEdge: .bottom) {
-            Text(text)
+            Text(SettingsLinks.text(text))
                 .font(.callout)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(width: 300, alignment: .leading)
                 .padding(12)
+                // A link to another part of Settings closes the popover on its way there.
+                .environment(\.openURL, OpenURLAction { url in
+                    guard SettingsLinks.open(url) else { return .systemAction }
+                    showing = false
+                    pinned = false
+                    return .handled
+                })
         }
         .accessibilityLabel("More about this setting")
-        .accessibilityHint(text)
+        .accessibilityHint(SettingsLinks.plain(text))
     }
 }

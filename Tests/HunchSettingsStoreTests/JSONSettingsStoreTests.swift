@@ -23,7 +23,7 @@ private func tempURL() -> URL {
         try a.update {
             $0.length = .long
             $0.customInstructions = "I write English and 中文."
-            $0.bindings.toggleGlobal = KeyChord(keyCode: 40, modifiers: 0x80000)
+            $0.bindings.styleNext = KeyChord(keyCode: 40, modifiers: 0x80000)
             $0.wordUnits.includeTrailingSpace = true
         }
         let b = JSONSettingsStore(fileURL: url)
@@ -62,13 +62,18 @@ private func tempURL() -> URL {
         #expect(c.bindings.writeForMe == .optionShiftTab)
     }
 
-    @Test func customPauseKeyIsKept() throws {
+    @Test func retiredShortcutsAreDroppedOnLoad() throws {
         let url = tempURL()
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try Data(#"{"bindings": {"toggleCurrentApp": {"keyCode": 35, "modifiers": 262144}}}"#.utf8).write(to: url)
-        let c = JSONSettingsStore(fileURL: url).current()
-        #expect(c.bindings.toggleCurrentApp == KeyChord(keyCode: 35, modifiers: 262144))
-        #expect(c.bindings.writeForMe == .optionShiftTab)
+        let chord = #"{"keyCode": 35, "modifiers": 262144}"#
+        let keys = ["forceActivate", "toggleCurrentApp", "toggleGlobal", "nextAlternative", "previousAlternative",
+                    "catchUp", "revertFix"]
+        let json = "{\"bindings\": {" + keys.map { "\"\($0)\": \(chord)" }.joined(separator: ", ") + "}}"
+        try Data(json.utf8).write(to: url)
+        let b = JSONSettingsStore(fileURL: url).current().bindings
+        #expect(b.forceActivate == nil && b.toggleCurrentApp == nil && b.toggleGlobal == nil)
+        #expect(b.nextAlternative == nil && b.previousAlternative == nil && b.catchUp == nil && b.revertFix == nil)
+        #expect(b.writeForMe == .optionShiftTab)
     }
 
     @Test func clearedKeysStayClearedAcrossReload() throws {
@@ -81,13 +86,12 @@ private func tempURL() -> URL {
         #expect(reloaded.bindings.toggleCurrentApp == nil)
     }
 
-    @Test func pauseKeyOnOldChordIsKeptOnceWriteKeyIsSaved() throws {
-        // The user put the pause back on Shift+Option+Tab after recording another write key.
+    @Test func savedWriteKeyIsKept() throws {
         let url = tempURL()
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Data(#"{"bindings": {"toggleCurrentApp": {"keyCode": 48, "modifiers": 655360}, "writeForMe": {"keyCode": 36, "modifiers": 262144}}}"#.utf8).write(to: url)
         let c = JSONSettingsStore(fileURL: url).current()
-        #expect(c.bindings.toggleCurrentApp == .optionShiftTab)
+        #expect(c.bindings.toggleCurrentApp == nil)  // retired
         #expect(c.bindings.writeForMe == KeyChord(keyCode: 36, modifiers: 262144))
     }
 

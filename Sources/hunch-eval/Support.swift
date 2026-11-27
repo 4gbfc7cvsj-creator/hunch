@@ -101,9 +101,11 @@ func firstWord(_ text: String) -> String {
 func firstWordMatches(expect: [String], before: String, completion: String) -> Bool {
     let joined = wordStartText(before: before, completion: completion).lowercased()
     guard !joined.isEmpty else { return false }
-    let word = firstWord(joined)
+    // Curly and straight apostrophes count as the same ("don’t" matches "don't").
+    let word = firstWord(joined).replacingOccurrences(of: "\u{2019}", with: "'")
     for e in expect {
         let el = e.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\u{2019}", with: "'")
         guard !el.isEmpty else { continue }
         if el.contains(where: isCJK) {
             if joined.hasPrefix(el) { return true }

@@ -47,6 +47,30 @@ final class OverlayLayoutTests: XCTestCase {
         XCTAssertEqual(OverlayLayout.availableWidth(fromX: 900, visibleFrame: vis), 100)
         XCTAssertEqual(OverlayLayout.availableWidth(fromX: 1200, visibleFrame: vis), 0)
     }
+    func testAvailableWidthStopsAtField() {
+        let field = CGRect(x: 100, y: 0, width: 500, height: 40)
+        let caret = CGRect(x: 400, y: 10, width: 1, height: 18)
+        XCTAssertEqual(OverlayLayout.availableWidth(fromX: 401, visibleFrame: vis, fieldFrame: field, caretRect: caret), 199)
+        // Screen edge still wins when nearer.
+        let wide = CGRect(x: 100, y: 0, width: 2000, height: 40)
+        XCTAssertEqual(OverlayLayout.availableWidth(fromX: 401, visibleFrame: vis, fieldFrame: wide, caretRect: caret), 599)
+        // Caret outside the reported field (bad frame): the field is ignored.
+        let off = CGRect(x: 700, y: 10, width: 1, height: 18)
+        XCTAssertEqual(OverlayLayout.availableWidth(fromX: 701, visibleFrame: vis, fieldFrame: field, caretRect: off), 299)
+        XCTAssertEqual(OverlayLayout.availableWidth(fromX: 401, visibleFrame: vis, fieldFrame: nil, caretRect: caret), 599)
+    }
+    func testFitWholeWords() {
+        let m: (String) -> CGFloat = { CGFloat($0.count) * 10 }
+        XCTAssertEqual(OverlayLayout.fitWholeWords(" it just cuts off", maxWidth: 100, measure: m), " it just")
+        XCTAssertEqual(OverlayLayout.fitWholeWords(" it just cuts off", maxWidth: 1000, measure: m), " it just cuts off")
+        // Cut right at a space keeps the words before it.
+        XCTAssertEqual(OverlayLayout.fitWholeWords("ab cd ef", maxWidth: 50, measure: m), "ab cd")
+        // No break in the part that fits: by character.
+        XCTAssertEqual(OverlayLayout.fitWholeWords("ffff, which", maxWidth: 30, measure: m), "fff")
+        XCTAssertEqual(OverlayLayout.fitWholeWords(" itsuggestion", maxWidth: 40, measure: m), " its")
+        XCTAssertEqual(OverlayLayout.fitWholeWords("我們明天見面吧", maxWidth: 30, measure: m), "我們明")
+        XCTAssertEqual(OverlayLayout.fitWholeWords("hi there", maxWidth: 0, measure: m), "")
+    }
     func testCardBelow() {
         let f = OverlayLayout.cardFrame(caretRect: CGRect(x: 100, y: 300, width: 1, height: 18), size: CGSize(width: 200, height: 24), visible: vis)
         XCTAssertEqual(f.minY, 300 - 8 - 24)

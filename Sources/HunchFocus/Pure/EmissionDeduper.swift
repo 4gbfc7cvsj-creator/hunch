@@ -5,7 +5,7 @@ import HunchCore
 /// Suppresses repeated focus events so an unchanged field emits nothing on each poll tick.
 public struct EmissionDeduper: Sendable {
     public enum Key: Hashable, Sendable {
-        case context(field: FieldID, signature: UInt64, markedText: Bool, caret: RectKey, quality: Int)
+        case context(field: FieldID, signature: UInt64, markedText: Bool, caret: RectKey, box: RectKey?, quality: Int)
         case blocked(reason: String, pid: pid_t?)
         case focusLost
     }
@@ -19,6 +19,8 @@ public struct EmissionDeduper: Sendable {
         }
     }
 
+    // The field frame is part of the key: apps that lay out late (Electron chats) report a settling
+    // frame, and what is drawn relative to the box (quick replies) must follow it.
     private var last: Key?
 
     public init() {}
@@ -27,7 +29,7 @@ public struct EmissionDeduper: Sendable {
         switch event {
         case .context(let ctx, let geo):
             return .context(field: ctx.field, signature: ctx.contentSignature, markedText: ctx.hasMarkedText,
-                            caret: RectKey(geo.caretRect), quality: geo.quality.rawValue)
+                            caret: RectKey(geo.caretRect), box: geo.fieldFrame.map(RectKey.init), quality: geo.quality.rawValue)
         case .blocked(let reason, let app):
             return .blocked(reason: String(describing: reason), pid: app?.pid)
         case .focusLost:

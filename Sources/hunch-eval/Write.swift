@@ -7,6 +7,7 @@ import HunchCore
 import HunchEngine
 import HunchLlama
 import HunchModels
+import HunchPolicy
 import HunchPrompt
 import HunchText
 
@@ -17,6 +18,10 @@ struct WriteCase: Decodable {
     var source: String
     var about: String?
     var screen: String?
+    /// The app's own notes (Settings → Apps), as the app sends them; "ai" means the AI category preset.
+    var appNotes: String?
+    /// The app the field is in, as "Where I am typing" names it.
+    var app: String?
     var mustInclude: [String]
     var mustExclude: [String]
     // Dictation cleanup cases.
@@ -119,6 +124,10 @@ func runWriteCommand(_ args: [String]) async -> Int32 {
                                    context: PromptInput(before: "", aboutWriter: c.about, preferredLanguages: ["en"],
                                                         screenContext: c.screen),
                                    dictation: dictation, instruction: c.instruction)
+        request.context.appName = c.app
+        if let notes = c.appNotes {
+            request.context.appInstructions = notes == "ai" ? CategoryPresets.table[CategoryNames.ai]?.customInstructions : notes
+        }
         if c.replies == true {
             if appScreen, let screen = c.screen {
                 request.context.screenContext = pipelineScreen(screen, before: "", surface: c.surface ?? .chat)

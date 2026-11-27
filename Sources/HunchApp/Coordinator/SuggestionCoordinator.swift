@@ -400,7 +400,7 @@ final class SuggestionCoordinator {
             screen?.noteTyping()
             learning?.noteTyping()
             outcomes.keyDown(isCharacter: isCharacter)
-            autocorrect?.noteKeyDown()
+            autocorrect?.noteKeyDown(plainBackspace: ChordMatcher.isPlainBackspace(chord))
             if ChordMatcher.isPlainTab(chord) { logTabPassed() }
             if isCharacter, session.isHoldingForEdit(now: .now) {
                 // Typed on while autocorrect edits: Tab no longer belongs to the hidden suggestion.

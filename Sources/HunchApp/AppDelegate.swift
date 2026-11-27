@@ -159,6 +159,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Hunch", isDirectory: true)
+        PrivateFile.restrictFolder(support)  // folders from older builds were 0755
         let policies = JSONPolicyStore(fileURL: support.appendingPathComponent("app-policies.json"),
                                        freshPatches: FirstLaunchPolicies.patches,
                                        freshMigrations: FirstLaunchPolicies.migrations)
@@ -1024,7 +1025,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let keyboard = self.keyboard, inserter = self.inserter, wordFlash = self.wordFlash, store = self.store
         var hooks = AutocorrectFollowUp.Hooks()
         hooks.setCatchUpWaiting = { keyboard.setCatchUpWaiting($0) }
-        hooks.armBackspaceUndo = { keyboard.armBackspaceUndo($0) }
+        hooks.armBackspaceUndo = { keyboard.armBackspaceUndo($0, doubleTapMilliseconds: $1, followUps: $2) }
         hooks.holdKeys = { keyboard.holdKeys() }
         hooks.releaseHeldKeys = { keyboard.releaseHeldKeys() }
         hooks.isHoldingKeys = { keyboard.isHoldingKeys }

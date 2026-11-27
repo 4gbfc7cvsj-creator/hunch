@@ -30,8 +30,7 @@ struct AppearancePane: View {
                 }
             } footer: {
                 if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion, appearance.animation != .none {
-                    Text("Reduce Motion is on in Accessibility settings, so every animation plays as a plain fade.")
-                        .foregroundStyle(.secondary)
+                    FooterText("Reduce Motion is on in Accessibility settings, so every animation plays as a plain fade.")
                 }
             }
 
@@ -50,12 +49,16 @@ struct AppearancePane: View {
             }
 
             Section {
-                Picker("Color", selection: model.bind(\.appearance.color)) {
+                Picker(selection: model.bind(\.appearance.color)) {
                     Text("Follow effect").tag(SuggestionColorChoice.followEffect)
                     Text("Match text").tag(SuggestionColorChoice.matchText)
                     Text("Grey").tag(SuggestionColorChoice.grey)
                     Text("Accent").tag(SuggestionColorChoice.accent)
                     Text("Custom").tag(SuggestionColorChoice.custom)
+                } label: {
+                    SettingLabel("Color", info: "Follow effect settles in the chosen effect\u{2019}s final color (set in its "
+                                 + "sliders), or matches the text when it has none. Match text uses the color of the "
+                                 + "text you\u{2019}re typing.")
                 }
                 .searchAnchor("appearance.color")
                 .pickerStyle(.segmented)
@@ -83,26 +86,25 @@ struct AppearancePane: View {
             } header: {
                 Text("Color")
             } footer: {
-                Text("Follow effect settles in the chosen effect\u{2019}s final color (set in its sliders), or matches "
-                     + "the text when it has none. Match text uses the color of the text you\u{2019}re typing. Apps, "
-                     + "websites and categories with an \u{201C}Own look\u{201D} in Apps & Sites use that instead.")
-                    .foregroundStyle(.secondary)
+                FooterText("Tips: Apps, websites and categories with an \u{201C}Own look\u{201D} in "
+                           + SettingsLinks.md("Apps & Sites", "apps.look") + " use that instead.")
             }
 
             Section {
-                Toggle("In dictation", isOn: model.bind(\.effectsForDictation))
+                Toggle(isOn: model.bind(\.effectsForDictation)) {
+                    SettingLabel("In dictation", info: "Dictated text plays the effect at the caret, then is pasted when it settles.")
+                }
                 .searchAnchor("appearance.dictation")
-                Toggle("In Write for me", isOn: model.bind(\.effectsForWriteForMe))
+                Toggle(isOn: model.bind(\.effectsForWriteForMe)) {
+                    SettingLabel("In Write for me", info: "The draft plays the effect as the words come in.")
+                }
                 .searchAnchor("appearance.writeForMe")
-                Toggle("In quick replies", isOn: model.bind(\.effectsForQuickReplies))
+                Toggle(isOn: model.bind(\.effectsForQuickReplies)) {
+                    SettingLabel("In quick replies", info: "Replies play the effect as they appear.")
+                }
                 .searchAnchor("appearance.quickReplies")
             } header: {
                 Text("Also use the effect")
-            } footer: {
-                Text("Dictated text plays the effect at the caret, then is pasted when it settles. Write for "
-                     + "me\u{2019}s draft plays it as the words come in, and quick replies as they appear. None turns it "
-                     + "off everywhere.")
-                    .foregroundStyle(.secondary)
             }
 
             IconsSection(model: model)

@@ -33,7 +33,9 @@ struct FakeVocabulary: VocabularyTable {
                      ".", ",", "!", "?", " It", " works", " Then", " costs", " 3", "14", " Mr", " Smith", " e", "g",
                      " Thanks", " Sam", " ok", "。", "好", "的", "我", "们", "今", "天", ".\n", " zz",
                      // appended for the word-boundary tests (keep earlier ids stable)
-                     "note", " another", " engineer", " hea", " he", " hearing", "ring", "aring", " an,", " avid"]
+                     "note", " another", " engineer", " hea", " he", " hearing", "ring", "aring", " an,", " avid",
+                     // appended for the character-aware word-start tests
+                     "—", "Sam", "é"]
         for w in words { e.append((Array(w.utf8), [])) }
         return FakeVocabulary(entries: e)
     }()

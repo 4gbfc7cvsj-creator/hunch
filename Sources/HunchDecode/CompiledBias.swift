@@ -7,6 +7,9 @@ import HunchCore
 struct BiasState: Equatable, MatchTracking {
     var nodes: [Int32] = []
     var previous: UInt8?
+    /// Bytes of the last (possibly still incomplete) character, so the word-boundary rule sees a
+    /// whole character, not one UTF-8 byte: after "好", "”" or "—" an entry may start.
+    var lastCharacter: [UInt8] = []
     /// Entry-end nodes already reached by this branch: a finished entry earns no second bonus
     /// ("Kubernetes Kubernetes Kubernetes").
     var finished: Set<Int32> = []
@@ -23,6 +26,9 @@ struct BiasState: Equatable, MatchTracking {
 struct PhraseState: Equatable, MatchTracking {
     var nodes: [Int32] = []
     var previous: UInt8?
+    /// Bytes of the last (possibly still incomplete) character, so the word-boundary rule sees a
+    /// whole character, not one UTF-8 byte: after "好", "”" or "—" an entry may start.
+    var lastCharacter: [UInt8] = []
     var finished: Set<Int32> = []
     var paid: Float = 0
 }
@@ -31,6 +37,9 @@ struct PhraseState: Equatable, MatchTracking {
 struct AvoidState: Equatable, MatchTracking {
     var nodes: [Int32] = []
     var previous: UInt8?
+    /// Bytes of the last (possibly still incomplete) character, so the word-boundary rule sees a
+    /// whole character, not one UTF-8 byte: after "好", "”" or "—" an entry may start.
+    var lastCharacter: [UInt8] = []
     var finished: Set<Int32> = []
     var paid: Float = 0
 }
@@ -38,6 +47,7 @@ struct AvoidState: Equatable, MatchTracking {
 protocol MatchTracking {
     var nodes: [Int32] { get set }
     var previous: UInt8? { get set }
+    var lastCharacter: [UInt8] { get set }
     var finished: Set<Int32> { get set }
     var paid: Float { get set }
 }
@@ -254,7 +264,7 @@ final class CompiledBias: @unchecked Sendable {
             }
             // No alignment survived this byte: whatever was paid belonged to a finished or dead match.
             if next.isEmpty { state.paid = 0 }
-            if mayStart(after: state.previous, firstByte: byte), let child = nodes[0].next[byte],
+            if mayStart(after: state, firstByte: byte), let child = nodes[0].next[byte],
                !next.contains(child) {
                 next.append(child)
             }
@@ -265,6 +275,11 @@ final class CompiledBias: @unchecked Sendable {
                 state.paid = max(state.paid, nodes[Int(node)].progress())
             }
             state.previous = byte
+            if byte & 0xC0 == 0x80, !state.lastCharacter.isEmpty, state.lastCharacter.count < 4 {
+                state.lastCharacter.append(byte)
+            } else {
+                state.lastCharacter = [byte]
+            }
         }
     }
 
@@ -286,7 +301,7 @@ final class CompiledBias: @unchecked Sendable {
             let start = max(nodes[Int(node)].progress(), state.paid)
             for item in expansion(of: node) { offer(item, from: start) }
         }
-        for item in expansion(of: 0) where mayStart(after: state.previous, firstByte: item.firstByte) {
+        for item in expansion(of: 0) where mayStart(after: state, firstByte: item.firstByte) {
             offer(item, from: 0)
         }
         return out
@@ -336,10 +351,13 @@ final class CompiledBias: @unchecked Sendable {
     }
     /// ASCII byte that is not part of a word.
     private static func isBoundaryByte(_ b: UInt8) -> Bool { b < 0x80 && !isWordByte(b) }
-    private func mayStart(after previous: UInt8?, firstByte: UInt8) -> Bool {
-        guard let previous else { return true }
+    /// An entry may start at the stream start, after a character that doesn't continue a word
+    /// (space, punctuation, CJK, curly quotes, dashes, emoji), or with a token that starts with
+    /// whitespace. Accented and other non-CJK letters continue a word like ASCII ones.
+    private func mayStart<S: MatchTracking>(after state: S, firstByte: UInt8) -> Bool {
+        guard state.previous != nil else { return true }
         if anchored { return false }
-        return !Self.isWordByte(previous) || Self.isSpace(firstByte)
+        return !WordBoundary.continuesWord(state.lastCharacter) || Self.isSpace(firstByte)
     }
 }
 

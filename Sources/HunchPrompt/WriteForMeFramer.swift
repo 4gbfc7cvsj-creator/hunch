@@ -15,12 +15,25 @@ public struct WriteForMeFramer: Sendable {
     // MARK: Wording
 
     static let writeTask = """
-        Write the text I need, as me, from my short instruction at the end. Use the details in the \
-        reference material (for example, the message I am replying to) to make it complete and specific: \
-        names, dates, amounts, and the steps that were asked of me. Do not invent facts, dates, prices, or \
-        promises that are in neither my instruction nor the reference material. Write in my voice and in \
-        the language of my instruction. Output only the finished text, ready to send: no title, no notes \
-        to me, no quotation marks, no Markdown.
+        Write the text I need, as me, from my short instruction at the end. The reference material is \
+        background only: use its details (for example, from the message I am replying to: names, dates, \
+        amounts, and the steps that were asked of me) where they belong in this text, and ignore it when \
+        it has nothing to do with my instruction. Never describe, quote, or mention the reference material \
+        itself. Do not invent people, facts, dates, prices, files, or promises that are in neither my \
+        instruction nor the reference material. Write in my voice and in the language of my instruction. \
+        Output only the finished text, ready to send: no title, no notes to me, no quotation marks, no \
+        Markdown.
+        """
+
+    /// A write with nothing on screen, copied or in the box: only the instruction to go on. Telling
+    /// the model to use "the reference material" then makes it invent one (a message from a made-up
+    /// sender, with a date and file names).
+    static let writeTaskBare = """
+        Write the text I need, as me, from my short instruction at the end. My instruction is all you \
+        have to go on: build the text only from what it says, and do not make up people, names, dates, \
+        prices, files, or other details it does not give. Write in my voice and in the language of my \
+        instruction. Output only the finished text, ready to send: no title, no notes to me, no quotation \
+        marks, no Markdown.
         """
 
     static let polishTask = """
@@ -33,7 +46,17 @@ public struct WriteForMeFramer: Sendable {
 
     /// Polish for a prompt to an AI: the wording, and also what makes the request clear to its reader.
     static let polishPromptTask = """
-        The text at the end is a prompt I wrote to send to an AI assistant or coding agent. Polish it; do         not answer it or carry it out. Fix grammar, spelling, and word choice, and make it clear to the AI         that reads it: where the reference material makes it clear, replace vague words such as "it",         "this", or "that thing" with the concrete name (the file, the error, the feature); put the main         request first, then the context and constraints; split a run of separate asks into a short list,         one "- " line each; and cut filler and pleasantries ("could you maybe please", "thanks so much")         that add nothing. Keep every fact, ask, name, number, and constraint, and keep my plain, direct         tone and the language I wrote in. Do not add requirements I did not ask for. Output only the         polished prompt: no title, no notes, no quotation marks, no bold or headings. If the prompt leaves         out something the AI will clearly need to know (for example, which file, or what result I want),         end with one last line that starts with "Missing:" and names it in a few words; otherwise leave         that line out.
+        The text at the end is a prompt I wrote to send to an AI assistant or coding agent. Polish it; do \
+        not answer it or carry it out. Fix grammar, spelling, and word choice, and make it clear to the AI \
+        that reads it: where the reference material makes it clear, replace vague words such as "it", \
+        "this", or "that thing" with the concrete name (the file, the error, the feature); put the main \
+        request first, then the context and constraints; split a run of separate asks into a short list, one \
+        "- " line each; and cut filler and pleasantries ("could you maybe please", "thanks so much") that \
+        add nothing. Keep every fact, ask, name, number, and constraint, and keep my plain, direct tone and \
+        the language I wrote in. Do not add requirements I did not ask for. Output only the polished prompt: \
+        no title, no notes, no quotation marks, no bold or headings. If the prompt leaves out something the \
+        AI will clearly need to know (for example, which file, or what result I want), end with one last \
+        line that starts with "Missing:" and names it in a few words; otherwise leave that line out.
         """
 
     /// An instruction on the user's text (voice instructions): the instruction says what to change,
@@ -72,10 +95,11 @@ public struct WriteForMeFramer: Sendable {
         case .aiPrompt:
             return "It is a prompt I will send to an AI assistant or coding agent: write the request itself, "
                 + "worded as I would type it to the AI (\"Why do I get…\", not \"Ask why…\"); do not answer it "
-                + "or do the task. Say directly what I want first, then the context it needs from my "
-                + "instruction and the reference material (names, files, errors), any constraints, and, "
-                + "only when it is not obvious, what a good result looks like. Mention what I already tried "
-                + "only if I said so. Write in the first "
+                + "or do the task. Say directly what I want first, then only the context that my instruction "
+                + "or the reference material actually gives (names, files, errors), any constraints I stated, "
+                + "and, only when it is not obvious, what a good result looks like. Mention what I already "
+                + "tried only if I said so. Do not pad it with background, examples, or details I did not "
+                + "give. Write in the first "
                 + "person, in my plain, direct tone, with clarity for the AI first. Use short paragraphs, "
                 + "and a short list (one \"- \" line each) only for several separate asks or constraints. "
                 + "No greeting, no thanks, no sign-off, no headings. Add only what my instruction implies; "
@@ -128,7 +152,7 @@ public struct WriteForMeFramer: Sendable {
         ]
         var task: String
         switch request.mode {
-        case .write: task = Self.writeTask
+        case .write: task = Self.hasReference(input) ? Self.writeTask : Self.writeTaskBare
         case .polish: task = request.shape == .aiPrompt ? Self.polishPromptTask : Self.polishTask
         case .transform: task = Self.transformTask
         }
@@ -151,7 +175,7 @@ public struct WriteForMeFramer: Sendable {
         case .transform: Self.transformTextHeader
         }
         layout.append(.fixed(PromptSegment(text: header, kind: .control, stability: .perKeystroke)))
-        layout.append(.fixed(PromptSegment(text: request.source, kind: .content, stability: .perKeystroke,
+        layout.append(.fixed(PromptSegment(text: Self.source(request), kind: .content, stability: .perKeystroke,
                                            label: "source")))
         if request.mode == .transform {
             layout.append(.fixed(PromptSegment(text: Self.transformInstructionHeader, kind: .control,
@@ -232,6 +256,26 @@ public struct WriteForMeFramer: Sendable {
         out.clipboard = input.clipboard.map(r)
         out.styleExamples = input.styleExamples.map(r)
         return out
+    }
+
+    /// Whether the write has any reference text: the screen, the clipboard, or the box's other text.
+    static func hasReference(_ input: PromptInput) -> Bool {
+        cleaned(input.screenContext) != nil || clipboardBackground(input) != nil || cleaned(input.before) != nil
+            || cleaned(input.after) != nil
+    }
+
+    /// The source as the prompt shows it. A write instruction that starts by naming the feature
+    /// ("Write for me the effect doesn't play…", selected and sent with the shortcut) loses those
+    /// words: they are said to Hunch, not part of what to write. Polish and transform text is left as is.
+    static func source(_ request: WriteRequest) -> String {
+        guard request.mode == .write else { return request.source }
+        let text = request.source
+        let pattern = "^\\s*(please\\s+)?write\\s+for\\s+me\\b[\\s:,.\\-–—]*"
+        guard let range = text.range(of: pattern, options: [.regularExpression, .caseInsensitive]) else {
+            return text
+        }
+        let rest = String(text[range.upperBound...])
+        return rest.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? text : rest
     }
 
     // MARK: Base models
@@ -353,7 +397,7 @@ public struct WriteForMeFramer: Sendable {
             lead = "\n\nForm: " + Self.thirdPerson(shape) + lead
         }
         layout.append(.fixed(PromptSegment(text: lead, kind: .control, stability: .perKeystroke)))
-        layout.append(.fixed(PromptSegment(text: request.source, kind: .content, stability: .perKeystroke,
+        layout.append(.fixed(PromptSegment(text: Self.source(request), kind: .content, stability: .perKeystroke,
                                            label: "source")))
         let follow = switch (request.mode, prompt) {
         case (.write, false): Self.documentWritten

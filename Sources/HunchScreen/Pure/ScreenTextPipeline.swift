@@ -244,6 +244,10 @@ public enum ScreenTextPipeline {
 
     /// Minimum characters of preview text to match against another line; shorter ones are too ambiguous.
     static let minReplyPreviewCharacters = 8
+    /// Minimum characters for the looser matches (the preview found inside another line, or another
+    /// line as the start of the preview): 8 let "@Sam see you there" drop the real reply
+    /// "ok see you there!".
+    static let minLooseReplyPreviewCharacters = 20
 
     /// Chat apps (Discord) show a one-line `@name quoted text...` preview above a reply. When the quoted
     /// message is also on screen (the preview is a prefix of, or contained in, another line, or the
@@ -258,7 +262,11 @@ public enum ScreenTextPipeline {
                 let o = normalize(other[keyPath: text])
                 if o == own || o.count < minReplyPreviewCharacters { continue }
                 for body in candidates where body.count >= minReplyPreviewCharacters {
-                    if o.contains(body) || body.hasPrefix(o) { return false }
+                    // The original starts with the quoted text; a long quote may also sit inside a
+                    // merged OCR row, and a wrapped original's first line starts the quote.
+                    if o.hasPrefix(body) { return false }
+                    if body.count >= minLooseReplyPreviewCharacters, o.contains(body) { return false }
+                    if o.count >= minLooseReplyPreviewCharacters, body.hasPrefix(o) { return false }
                 }
             }
             return true

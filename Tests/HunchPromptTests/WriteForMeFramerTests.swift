@@ -80,6 +80,38 @@ import Testing
         #expect(t.contains(WriteForMeFramer.polishHeader + "we r good with the rate"))
     }
 
+    @Test func writeWithNoReferenceTextNeverMentionsReferenceMaterial() {
+        // Nothing on screen, copied or in the box: a prompt that talks about "the reference material"
+        // made Gemma invent one (a message from "Sarah", dated, with a file name).
+        let r = WriteRequest(id: RequestID(1), mode: .write, source: "the effect doesn't play correctly",
+                             shape: .message, context: PromptInput(before: "", aboutWriter: "Name: Alex Morgan."))
+        let t = text(framer.frame(r, profile: gemmaInstruct, budget: 4096, counter: ScalarCounter()))
+        #expect(t.contains(WriteForMeFramer.writeTaskBare))
+        #expect(!t.lowercased().contains("reference material"))
+        // Any reference text brings the full task back.
+        var withScreen = r
+        withScreen.context.screenContext = "Sam: did the build pass?"
+        let s = text(framer.frame(withScreen, profile: gemmaInstruct, budget: 4096, counter: ScalarCounter()))
+        #expect(s.contains(WriteForMeFramer.writeTask))
+    }
+
+    @Test func aLeadingWriteForMeIsDroppedFromAWriteInstruction() {
+        func source(_ text: String, _ mode: WriteMode = .write) -> String {
+            WriteForMeFramer.source(WriteRequest(id: RequestID(1), mode: mode, source: text, shape: .message,
+                                                 context: PromptInput(before: "")))
+        }
+        #expect(source("Write for me the effect doesn't play correctly.") == "the effect doesn't play correctly.")
+        #expect(source("write for me: a thank-you note") == "a thank-you note")
+        #expect(source("please write for me, a reply to Sam") == "a reply to Sam")
+        #expect(source("Write for me") == "Write for me")
+        #expect(source("Write formal notes") == "Write formal notes")
+        #expect(source("Write for me the effect", .polish) == "Write for me the effect")
+        let base = WriteRequest(id: RequestID(1), mode: .write, source: "Write for me ask Sam about Friday",
+                                shape: .message, context: PromptInput(before: ""))
+        let t = text(framer.frame(base, profile: gemmaBase, budget: 4096, counter: ScalarCounter()))
+        #expect(t.contains("ask Sam about Friday") && !t.contains("Write for me ask"))
+    }
+
     @Test func sourceIsNeverCutReferenceIs() {
         let long = String(repeating: "word ", count: 300)
         let p = framer.frame(request(.polish, source: long, screen: String(repeating: "screen ", count: 500)),

@@ -109,7 +109,7 @@ struct PersonalizationPane: View {
         Form {
             Section {
                 Toggle(isOn: model.bind(\.usePersonalInfo)) {
-                    SettingLabel("Personal info", info: "Your Mac account\u{2019}s name (\(NSFullUserName())) and what you write below help with sign-offs, introductions and anything about you. Turn it off for single apps or sites in Apps & Sites. It stays on this Mac.")
+                    SettingLabel("Personal info", info: "Your Mac account\u{2019}s name (\(NSFullUserName())) and what you write below help with sign-offs, introductions and anything about you. It stays on this Mac.")
                 }
                 .searchAnchor("personalization.personalInfo")
                 TextEditor(text: model.bind(\.aboutMe))
@@ -120,6 +120,8 @@ struct PersonalizationPane: View {
                     .opacity(model.settings.usePersonalInfo ? 1 : 0.45)
             } header: {
                 SettingLabel("About me", info: "Who you are: your role, where you work or study, people and projects you often write about.")
+            } footer: {
+                FooterText("Tips: Turn Personal info off for single apps or sites in \(SettingsLinks.md("Apps & Sites", "apps.personalInfo")).")
             }
             Section {
                 TextEditor(text: model.bind(\.customInstructions))
@@ -127,7 +129,9 @@ struct PersonalizationPane: View {
                     .settingsTextBox(minHeight: 140)
                     .settingsPlaceholder(Self.howIWritePlaceholder, shown: model.settings.customInstructions.isEmpty)
             } header: {
-                SettingLabel("How I write", info: "Your style: tone, sentence length, the languages you mix, words you like or avoid. It applies everywhere; add per-app notes in Apps & Sites.")
+                SettingLabel("How I write", info: "Your style: tone, sentence length, the languages you mix, words you like or avoid. It applies everywhere.")
+            } footer: {
+                FooterText("Tips: Add per-app notes in \(SettingsLinks.md("Apps & Sites", "apps.instructions")).")
             }
             if model.settings.enabled {
                 SuggestionStylesSection(model: model)
@@ -165,26 +169,16 @@ struct PersonalizationPane: View {
                     .disabled(!model.settings.screenContextEnabled)
                     .opacity(model.settings.screenContextEnabled ? 1 : 0.45)
                     Toggle(isOn: model.bind(\.learning.enabled)) {
-                        SettingLabel("Learn words and phrases", info: "Hunch notes which suggestions you keep, correct, or type over, and learns names, jargon, and phrasings you use often (not common words like \u{201C}the\u{201D}). It also saves sentences you type and leans suggestions toward how they continue, using only sentences from the same app or category. Stored encrypted on this Mac only; never from password fields or apps where learning is off (see Apps & Sites).")
+                        SettingLabel("Learn words and phrases", info: "Hunch notes which suggestions you keep, correct, or type over, and learns names, jargon, and phrasings you use often (not common words like \u{201C}the\u{201D}). It also saves sentences you type and leans suggestions toward how they continue, using only sentences from the same app or category. Stored encrypted on this Mac only; never from password fields or apps where learning is off (see \(SettingsLinks.md("Apps & Sites", "apps.learning"))).")
                     }
                     .searchAnchor("personalization.learnWords")
-                    LabeledContent {
-                        VStack(spacing: 2) {
-                            Slider(value: strengthIndex, in: 0...Double(Self.strengthLevels.count - 1), step: 1)
-                            HStack {
-                                ForEach(Self.strengthLevels.indices, id: \.self) { index in
-                                    Text(Self.strengthLevels[index].name)
-                                        .font(.caption2)
-                                        .foregroundStyle(Int(strengthIndex.wrappedValue) == index ? .primary : .secondary)
-                                    if index < Self.strengthLevels.count - 1 { Spacer(minLength: 0) }
-                                }
-                            }
-                        }
-                        .frame(width: 260)
-                    } label: {
-                        SettingLabel("Personalize word choice",
-                                     info: "How strongly learned words and phrases steer suggestions.")
-                    }
+                    StopSlider(title: "Personalize word choice",
+                               detail: "How strongly learned words and phrases steer suggestions.",
+                               count: Self.strengthLevels.count,
+                               index: Binding(get: { Int(strengthIndex.wrappedValue) },
+                                              set: { strengthIndex.wrappedValue = Double($0) }),
+                               value: Self.strengthLevels[Int(strengthIndex.wrappedValue)].name,
+                               detailAsInfo: true)
                     .searchAnchor("personalization.wordChoice")
                     .disabled(!model.settings.learning.enabled)
                     Toggle(isOn: model.bind(\.learning.styleExamplesEnabled)) {

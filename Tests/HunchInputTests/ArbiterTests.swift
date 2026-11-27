@@ -5,7 +5,11 @@ import Testing
 private let field = FieldID(pid: 42, elementHash: 7, generation: 1)
 private let identity = MachTimebase(numer: 1, denom: 1)
 
-private func arbiter(_ snapshot: ArbiterSnapshot?, bindings: AcceptBindings = AcceptBindings()) -> DefaultAcceptanceArbiter {
+/// The shortcuts as bound before the retired ones were unset (2026-11-26): their logic is still tested.
+let legacyBindings = AcceptBindings(forceActivate: .controlTab, nextAlternative: .optionDown, previousAlternative: .optionUp,
+                                    revertFix: .controlShiftZ)
+
+private func arbiter(_ snapshot: ArbiterSnapshot?, bindings: AcceptBindings = legacyBindings) -> DefaultAcceptanceArbiter {
     let a = DefaultAcceptanceArbiter(bindings: bindings, maxAgeNanoseconds: 1_500, timebase: identity)
     a.publish(snapshot)
     return a
@@ -74,7 +78,7 @@ private func snap(ghost: Bool = true, at: UInt64 = 1_000, tab: Bool = true) -> A
 }
 
 @Test func globalShortcutsRecognizedWithoutGhost() {
-    var bindings = AcceptBindings()
+    var bindings = legacyBindings
     bindings.toggleGlobal = KeyChord(keyCode: 5, modifiers: ChordMatcher.control | ChordMatcher.option)
     let a = arbiter(nil, bindings: bindings)
     #expect(a.inputVerdict(for: .controlTab, now: 0) == .shortcut(.forceActivate))
@@ -117,7 +121,7 @@ private func snap(ghost: Bool = true, at: UInt64 = 1_000, tab: Bool = true) -> A
 
 // MARK: Consuming tap without a visible ghost
 
-private func noGhostDecision(_ chord: KeyChord, bindings: AcceptBindings = AcceptBindings(),
+private func noGhostDecision(_ chord: KeyChord, bindings: AcceptBindings = legacyBindings,
                              snapshot: ArbiterSnapshot? = nil, focus: Bool = true) -> InputVerdict {
     TapRules.decide(ghostVisible: false, editableFocus: focus, chord: chord, snapshot: snapshot, bindings: bindings, now: 1_000, maxAgeTicks: 1_500)
 }
@@ -144,7 +148,7 @@ private func noGhostDecision(_ chord: KeyChord, bindings: AcceptBindings = Accep
     let live = ArbiterSnapshot(field: field, hasGhost: true, publishedAt: 1_000, tabAllowed: true)
     let decide = { (chord: KeyChord) in
         TapRules.decide(ghostVisible: true, editableFocus: true, chord: chord, snapshot: live,
-                        bindings: AcceptBindings(), now: 1_000, maxAgeTicks: 1_500)
+                        bindings: legacyBindings, now: 1_000, maxAgeTicks: 1_500)
     }
     #expect(decide(.optionTab) == .accept(.full))
     #expect(decide(.optionShiftTab) == .shortcut(.writeForMe))
@@ -172,7 +176,7 @@ private func noGhostDecision(_ chord: KeyChord, bindings: AcceptBindings = Accep
 @Test func ghostVisibleKeepsAcceptBehaviorAndShortcuts() {
     let live = ArbiterSnapshot(field: field, hasGhost: true, publishedAt: 1_000, tabAllowed: true)
     func decide(_ chord: KeyChord) -> InputVerdict {
-        TapRules.decide(ghostVisible: true, editableFocus: false, chord: chord, snapshot: live, bindings: AcceptBindings(), now: 1_000, maxAgeTicks: 1_500)
+        TapRules.decide(ghostVisible: true, editableFocus: false, chord: chord, snapshot: live, bindings: legacyBindings, now: 1_000, maxAgeTicks: 1_500)
     }
     #expect(decide(.tab) == .accept(.word))
     #expect(decide(.escape) == .dismiss)
@@ -200,7 +204,7 @@ private func noGhostDecision(_ chord: KeyChord, bindings: AcceptBindings = Accep
     var g = none
     g.toggleGlobal = .controlTab
     #expect(TapRules.tapShouldRun(ghostVisible: false, editableFocus: false, bindings: g))
-    #expect(TapRules.globalShortcutChords(AcceptBindings()) == [.controlTab, .optionShiftTab, .controlShiftZ])
+    #expect(TapRules.globalShortcutChords(AcceptBindings()) == [.optionShiftTab])
 }
 
 @Test func arbiterReportsBoundShortcutChords() {
@@ -257,10 +261,10 @@ private func noGhostDecision(_ chord: KeyChord, bindings: AcceptBindings = Accep
 @Test func tapRulesCycleNeedsVisibleGhost() {
     let live = snap()
     let on = TapRules.decide(ghostVisible: true, editableFocus: true, chord: .optionDown, snapshot: live,
-                             bindings: AcceptBindings(), now: 1_000, maxAgeTicks: 1_500)
+                             bindings: legacyBindings, now: 1_000, maxAgeTicks: 1_500)
     #expect(on == .cycleAlternative(forward: true))
     let off = TapRules.decide(ghostVisible: false, editableFocus: true, chord: .optionDown, snapshot: live,
-                              bindings: AcceptBindings(), now: 1_000, maxAgeTicks: 1_500)
+                              bindings: legacyBindings, now: 1_000, maxAgeTicks: 1_500)
     #expect(off == .passThrough)
 }
 
@@ -268,7 +272,7 @@ private func noGhostDecision(_ chord: KeyChord, bindings: AcceptBindings = Accep
     func verdict(_ chord: KeyChord, available: Bool) -> InputVerdict {
         let snap = ArbiterSnapshot(field: field, hasGhost: true, publishedAt: 1_000, tabAllowed: true,
                                    alternativesAvailable: available)
-        return ArbiterRules.decide(chord: chord, snapshot: snap, bindings: AcceptBindings(), now: 1_000, maxAgeTicks: 1_500)
+        return ArbiterRules.decide(chord: chord, snapshot: snap, bindings: legacyBindings, now: 1_000, maxAgeTicks: 1_500)
     }
     #expect(verdict(.optionDown, available: true) == .cycleAlternative(forward: true))
     #expect(verdict(.optionUp, available: true) == .cycleAlternative(forward: false))
@@ -284,7 +288,7 @@ private func noGhostDecision(_ chord: KeyChord, bindings: AcceptBindings = Accep
                                       alternativesAvailable: false)
     let hold = ArbiterSnapshot(field: field, hasGhost: true, publishedAt: 1_000, tabAllowed: true, holdOnly: true)
     func decide(_ chord: KeyChord, _ s: ArbiterSnapshot) -> InputVerdict {
-        ArbiterRules.decide(chord: chord, snapshot: s, bindings: AcceptBindings(), now: 1_000, maxAgeTicks: 1_500)
+        ArbiterRules.decide(chord: chord, snapshot: s, bindings: legacyBindings, now: 1_000, maxAgeTicks: 1_500)
     }
     #expect(decide(.tab, replacement) == .accept(.word))
     #expect(decide(.escape, replacement) == .dismiss)
@@ -301,7 +305,7 @@ private func noGhostDecision(_ chord: KeyChord, bindings: AcceptBindings = Accep
     func decide(_ chord: KeyChord, shell: Bool, tabAllowed: Bool) -> InputVerdict {
         let snap = ArbiterSnapshot(field: field, hasGhost: true, publishedAt: 1_000, tabAllowed: tabAllowed,
                                    shellKeys: shell)
-        return ArbiterRules.decide(chord: chord, snapshot: snap, bindings: AcceptBindings(), now: 1_000, maxAgeTicks: 1_500)
+        return ArbiterRules.decide(chord: chord, snapshot: snap, bindings: legacyBindings, now: 1_000, maxAgeTicks: 1_500)
     }
     #expect(decide(.rightArrow, shell: true, tabAllowed: false) == .accept(.word))
     #expect(decide(.optionRight, shell: true, tabAllowed: false) == .accept(.full))
@@ -318,7 +322,7 @@ private func noGhostDecision(_ chord: KeyChord, bindings: AcceptBindings = Accep
     func decide(_ chord: KeyChord, word: AcceptKey, full: AcceptKey = .shortcuts, tab: Bool = true) -> InputVerdict {
         let snap = ArbiterSnapshot(field: field, hasGhost: true, publishedAt: 1_000, tabAllowed: tab,
                                    wordKey: word, fullKey: full)
-        return ArbiterRules.decide(chord: chord, snapshot: snap, bindings: AcceptBindings(), now: 1_000, maxAgeTicks: 1_500)
+        return ArbiterRules.decide(chord: chord, snapshot: snap, bindings: legacyBindings, now: 1_000, maxAgeTicks: 1_500)
     }
     // Code editors: Right arrow for the next word, Tab stays with the editor, Option+Tab still accepts all.
     #expect(decide(.rightArrow, word: .chord(.rightArrow)) == .accept(.word))
